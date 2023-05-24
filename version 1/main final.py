@@ -13,10 +13,13 @@ from PyQt6.QtCore import Qt
 import pandasway_w_class as pd_obj
 import csv
 import pandas as pd
+import os
 from gui_v1 import UI_Dialog
 
-studentsFile = 'students.csv'
-courseFile = 'course.csv'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+studentsFile = os.path.join(script_dir, 'students.csv')
+courseFile = os.path.join(script_dir, 'course.csv')
 tableStyleSheet = """
             QTableView {
                 background-color: rgb(39, 41, 50);
