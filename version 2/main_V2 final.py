@@ -78,13 +78,6 @@ class Functions(Ui_Dialog):
         self.setFunctions()
 
     def setFunctions(self):
-        '''
-        csv_file = open('course.csv', newline='')
-        reader = csv.reader(csv_file)
-        next(reader)
-        items = [row[0] for row in reader]
-        self.comboBox.insertItems(1, items)
-        '''
         self.comboBox.insertItems(1, self.lists[2])
         self.GcomboBox.insertItems(1, self.gender)
         self.YcomboBox.insertItems(1, self.year)
@@ -221,7 +214,6 @@ class Functions(Ui_Dialog):
         self.delete_rows(rows_to_remove, "student id")
 
     # not needed
-
     def updateModels(self, table):
         if table == "students":
             table_db = db.table_for_students()
@@ -278,16 +270,6 @@ class Functions(Ui_Dialog):
                 self.lists[2] = db.list_of_courses()
                 self.comboBox.clear()
                 self.comboBox.addItems(self.lists[2])
-                # self.updateModels("courses")
-
-                '''
-                self.courseModel.appendRow(
-                    [QtGui.QStandardItem(self.addCourseLine.text())], [QtGui.QStandardItem(self.addCourseLine.text())])
-                self.courseList.append(self.addCourseLine.text())
-                self.comboBox.addItem(self.addCourseLine.text())
-                print(self.courseModel.indexFromItem(
-                    self.courseModel.index(2, 1)).data())
-                '''
             except Exception as e:
                 print(str(e))
 
