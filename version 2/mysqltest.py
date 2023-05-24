@@ -14,9 +14,9 @@ import numpy
 '''
 # Connect to the MySQL database
 mydb = mysql.connector.connect(
-    host="localhost",
-    user="viewer",
-    password="viewingthefile",
+    host="replace",
+    user="replace",
+    password="replace",
     database="test_db"
 )
 
