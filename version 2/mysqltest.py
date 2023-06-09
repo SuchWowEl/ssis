@@ -12,11 +12,18 @@ import numpy
 '''
 
 '''
+# custom class
+
+
+class CustomException(Exception):
+    pass
+
+
 # Connect to the MySQL database
 mydb = mysql.connector.connect(
-    host="replace",
-    user="replace",
-    password="replace",
+    host="localhost",
+    user="viewer",
+    password="viewingthefile",
     database="test_db"
 )
 
@@ -40,11 +47,17 @@ def add_row(val):
         print("cannot add")
     else:
     '''
+    # try:
     sql = "INSERT INTO students (`student id`, name, gender, `year level`, `course code`) VALUES (%s, %s, %s, %s, %s)"
     val = (val[0], val[1], val[2], val[3], val[4])
     mycursor.execute(sql, val)
     # Commit the transaction
     mydb.commit()
+    '''
+    except Exception as e:
+        print("outside error")
+        return e
+        '''
 
 
 def duplicate_checker(column, val, table):

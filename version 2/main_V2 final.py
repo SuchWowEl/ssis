@@ -3,7 +3,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt
 # from PySide6.QtWidgets import QTableView, QApplication, QMessageBox
 # from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex
-import pandasway_w_class as pd_obj
+# import pandasway_w_class as pd_obj
 import csv
 import mysqltest as db
 from gui_V2 import Ui_Dialog
@@ -14,6 +14,21 @@ import pandas as pd
 
 class CustomException(Exception):
     pass
+
+
+class CustomWarningBox(QtWidgets.QDialog):
+    def __init__(self, parent, text):
+        super().__init__(parent)
+        self.setWindowTitle(f"Warning!")
+        self.setMinimumWidth(300)
+        self.setMinimumHeight(100)
+
+        layout = QtWidgets.QVBoxLayout()
+        self.label = QtWidgets.QLabel(text)
+        self.setLayout(layout)
+        layout.addWidget(self.label)
+
+        # self.exec()
 
 
 class ChooserPopUp(QtWidgets.QDialog):
@@ -119,12 +134,13 @@ class Functions(Ui_Dialog):
 
     def addClicked(self):
         if self.lineEdit_name.text() and self.lineEdit_id.text() and self.comboBox.currentText():
-            arrey = [self.lineEdit_id.text(), self.lineEdit_name.text(), self.GcomboBox.currentText(
-            ), self.YcomboBox.currentText(), self.comboBox.currentText()]
-            print(arrey)
-            print(db.duplicate_checker("student id", arrey[0], "students"))
-            print(self.lists[2])
-            if db.duplicate_checker("student id", arrey[0], "students") is None:
+            try:
+                arrey = [self.lineEdit_id.text(), self.lineEdit_name.text(), self.GcomboBox.currentText(
+                ), self.YcomboBox.currentText(), self.comboBox.currentText()]
+                print(arrey)
+                # print(db.duplicate_checker("student id", arrey[0], "students"))
+                print(self.lists[2])
+                # if db.duplicate_checker("student id", arrey[0], "students") is None:
                 # ----------------------------------------------------------------------------------------------------------------------------------------------
                 db.add_row(arrey)
                 num_rows = self.studentModel.rowCount()
@@ -141,6 +157,9 @@ class Functions(Ui_Dialog):
                 self.studentModel.sort(0, Qt.SortOrder.AscendingOrder)
 
                 self.studentModel.blockSignals(False)
+            except Exception as e:
+                var = CustomWarningBox(Dialog, text=str(e))
+                var.exec()
 # ----------------------------------------------------------------------------------------------------------------------------------------------
 
     def search_table(self):
@@ -184,7 +203,7 @@ class Functions(Ui_Dialog):
         model = self.studentModel if table == "student id" else self.courseModel
         selected_indexes = selection_model.selectedIndexes()
         print(selected_indexes)
-        if len(selected_indexes) is not 0:
+        if len(selected_indexes) != 0:
             rows_to_remove = []
             primary_key = []
             temp = -1
@@ -247,10 +266,12 @@ class Functions(Ui_Dialog):
         print(f"addCourseClicked condition: {condition2}")
         if condition2:
             try:
+                '''
                 if db.duplicate_checker("course code", self.addCourseCodeLine.text(), "courses"):
                     raise CustomException("Course Code is duplicate")
                 elif db.duplicate_checker("course", self.addCourseLine.text(), "courses"):
                     raise CustomException("Course is duplicate")
+                    '''
                 arrey = [self.addCourseCodeLine.text(),
                          self.addCourseLine.text()]
                 db.add_course(arrey)
@@ -272,7 +293,9 @@ class Functions(Ui_Dialog):
                 self.comboBox.clear()
                 self.comboBox.addItems(self.lists[2])
             except Exception as e:
-                print(str(e))
+                var = CustomWarningBox(Dialog, str(e))
+                var.exec()
+                # print(str(e))
 
     def edit_cell(self, item, column, table):
         print(f"\nediting {table}: ")
@@ -315,6 +338,8 @@ class Functions(Ui_Dialog):
             model.itemFromIndex(model.index(
                 row, columnNumber)).setText(previous_text)
             model.blockSignals(False)
+            var = CustomWarningBox(Dialog, str(e))
+            var.exec()
 
     def on_student_selection_changed(self, current_index, previous_index):
         column = current_index.column()
