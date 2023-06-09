@@ -183,35 +183,36 @@ class Functions(Ui_Dialog):
         ) if table == "student id" else self.courseTable.selectionModel()
         model = self.studentModel if table == "student id" else self.courseModel
         selected_indexes = selection_model.selectedIndexes()
+        print(selected_indexes)
+        if len(selected_indexes) is not 0:
+            rows_to_remove = []
+            primary_key = []
+            temp = -1
+            for indx in selected_indexes:
+                if temp != indx.row():
+                    rows_to_remove.append(indx.row())
+                    primary_key.append(model.index(indx.row(), 0).data(0))
+                    # to remove duplicate row indexes
+                    temp = indx.row()
+            print(f"rows_to_remove = {rows_to_remove}")
+            rows_to_remove.sort(reverse=True)
 
-        rows_to_remove = []
-        primary_key = []
-        temp = -1
-        for indx in selected_indexes:
-            if temp != indx.row():
-                rows_to_remove.append(indx.row())
-                primary_key.append(model.index(indx.row(), 0).data(0))
-                # to remove duplicate row indexes
-                temp = indx.row()
-        print(f"rows_to_remove = {rows_to_remove}")
-        rows_to_remove.sort(reverse=True)
+            if table == "student id":
+                print("removing student entry/ies:")
+                # self.pd_obj.deleteEntry(rows_to_remove)
+                db.delete_rows(primary_key)
+            else:
+                print("else:")
+                db.delete_course(primary_key)
+                self.delete_rows(rows_to_remove, "course code")
+                rows_to_remove = self.student_id_in_course(primary_key)
 
-        if table == "student id":
-            print("removing student entry/ies:")
-            # self.pd_obj.deleteEntry(rows_to_remove)
-            db.delete_rows(primary_key)
-        else:
-            print("else:")
-            db.delete_course(primary_key)
-            self.delete_rows(rows_to_remove, "course code")
-            rows_to_remove = self.student_id_in_course(primary_key)
+                model.sort(1, Qt.SortOrder.AscendingOrder)
+                self.lists[2] = db.list_of_courses()
 
-            model.sort(1, Qt.SortOrder.AscendingOrder)
-            self.lists[2] = db.list_of_courses()
-
-            self.comboBox.clear()
-            self.comboBox.addItems(self.lists[2])
-        self.delete_rows(rows_to_remove, "student id")
+                self.comboBox.clear()
+                self.comboBox.addItems(self.lists[2])
+            self.delete_rows(rows_to_remove, "student id")
 
     # not needed
     def updateModels(self, table):
