@@ -288,7 +288,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.editEntryButton.setText(_translate("Dialog", "EDIT: OFF"))
+        self.editEntryButton.setText(_translate("Dialog", "REFRESH"))
         self.deleteStudentButton.setText(_translate("Dialog", "DELETE ENTRY"))
         self.label_9.setText(_translate(
             "Dialog", "Simple Student Information System (SSIS)"))
@@ -314,7 +314,7 @@ class Ui_Dialog(object):
         self.addCourseButton.setText(_translate("Dialog", "ADD"))
         self.label.setText(_translate(
             "Dialog", "Simple Student Information System (SSIS)"))
-        self.editCourseButton.setText(_translate("Dialog", "EDIT: OFF"))
+        self.editCourseButton.setText(_translate("Dialog", "REFRESH"))
         self.deleteCourseButton.setText(_translate("Dialog", "DELETE ENTRY"))
         self.courseLabel_2.setText(_translate("Dialog", "Course Code"))
         self.addCourseCodeLine.setPlaceholderText(
