@@ -1,8 +1,11 @@
 import pandas as pd
 import numpy as np
+import os
 
-studentsFile = 'students.csv'
-courseFile = 'course.csv'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+studentsFile = os.path.join(script_dir, 'students.csv')
+courseFile = os.path.join(script_dir, 'course.csv')
 
 '''
 # Creating the first Dataframe using dictionary
