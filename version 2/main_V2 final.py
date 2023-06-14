@@ -218,22 +218,14 @@ class Functions(Ui_Dialog):
         self.deleteCourseButton.clicked.connect(
             lambda table: self.delete_entry("course code"))
 
-        self.studentModel.itemChanged.connect(
-            lambda item, table="students": self.edit_cell(item, self.studentModel.headerData(item.column(), Qt.Orientation.Horizontal), table))
         self.studentTable.doubleClicked.connect(
             lambda index, table="students": self.trigger_popup(index, table))
         self.studentTable.selectionModel().currentChanged.connect(
             self.on_student_selection_changed)
-        self.studentTable.clicked.connect(
-            lambda index: self.cell_clicked(index, "students"))
-        self.courseModel.itemChanged.connect(
-            lambda item, table="courses": self.edit_cell(item, self.courseModel.headerData(item.column(), Qt.Orientation.Horizontal), table))
         self.courseTable.doubleClicked.connect(
             lambda index, table="courses": self.trigger_popup(index, table))
         self.courseTable.selectionModel().currentChanged.connect(
             self.on_course_selection_changed)
-        self.courseTable.clicked.connect(
-            lambda index: self.cell_clicked(index, "courses"))
         self.tabWidget.currentChanged.connect(self.handle_tab_changed)
 
         self.editEntryButton.clicked.connect(
@@ -259,18 +251,14 @@ class Functions(Ui_Dialog):
 
     def addClicked(self):
         try:
+            if any(id == "" or id.isspace() for id in [self.lineEdit_id.text(), self.lineEdit_id_2.text()]):
+                raise CustomException("Error: Please fill out ID fields")
             arrey = [f"{self.lineEdit_id.text()}-{self.lineEdit_id_2.text()}", self.lineEdit_name.text(), self.GcomboBox.currentText(
             ), self.YcomboBox.currentText(), self.comboBox.currentText()]
             if any(element == "" for element in arrey) or any(item.isspace() for item in arrey):
-                # if all(arrey) and not any(i.isspace() for i in arrey):
                 raise CustomException("Please fill all the fields")
-            # arrey = [self.lineEdit_id.text(), self.lineEdit_name.text(), self.GcomboBox.currentText(
-            # ), self.YcomboBox.currentText(), self.comboBox.currentText()]
             print(arrey)
-            # print(db.duplicate_checker("student id", arrey[0], "students"))
             print(self.lists[2])
-            # if db.duplicate_checker("student id", arrey[0], "students") is None:
-            # ----------------------------------------------------------------------------------------------------------------------------------------------
             db.add_row(arrey)
             num_rows = self.studentModel.rowCount()
             self.studentModel.insertRow(num_rows)
@@ -387,6 +375,9 @@ class Functions(Ui_Dialog):
         tableview.setModel(model)
 
         model.blockSignals(False)
+        warning = CustomWarningBox(
+            Dialog, "Hover mouse to table to complete update")
+        warning.exec()
 
     def addCourseClicked(self):
         condition1 = (not (self.addCourseCodeLine.text() in self.lists[2]))
@@ -430,48 +421,6 @@ class Functions(Ui_Dialog):
                 var.exec()
                 # print(str(e))
 
-    def edit_cell(self, item, column, table):
-        print(f"\nediting {table}: ")
-        row = item.row()
-        columnNumber = item.column()
-        new_text = item.text()
-
-        model = self.studentModel if table == "students" else self.courseModel
-        key_value = model.index(row, 0).data(0)
-        previous_text = self.prevText  # if self.prevText != "" else new_text
-        # print(f"conditional is: {not new_text.isspace() and db.duplicate_checker(column, new_text, table) is None}")
-
-        try:
-            if (new_text != "" and previous_text != ""):
-                print(f"{previous_text}")
-                if not new_text.isspace() and db.duplicate_checker(column, new_text, table) is None:
-                    key = previous_text if column == "course code" or column == "student id" else key_value
-                    db.edit_course(key, new_text, column) if table == "courses" else db.edit_student(
-                        key, new_text, column)
-                    # if key == previous_text:
-                    if column == "course code":
-                        print(f"new_text: {new_text}")
-                        # self.lists[2] = [new_text if item == previous_text else item for item in self.lists[2]]
-                        self.lists[2] = db.list_of_courses()
-                        # self.courseList[row] = self.prevText = new_text
-                        self.editCourseNameinSTable(
-                            previous_text, new_text)
-                    self.prevText = new_text
-                else:
-                    raise CustomException(
-                        "Exception: Data is only space/s or a duplicate")
-            else:
-                raise CustomException("Exception: Data is blank")
-        except Exception as e:
-            print(str(e))
-            model.blockSignals(True)
-            model.itemFromIndex(model.index(
-                row, columnNumber)).setText(previous_text)
-            print("WOIIIIIIIIIIIIIIIIs")
-            model.blockSignals(False)
-            var = CustomWarningBox(Dialog, str(e))
-            var.exec()
-
     def on_student_selection_changed(self, current_index, previous_index):
         print("student")
         column = current_index.column()
@@ -487,9 +436,7 @@ class Functions(Ui_Dialog):
         header = model.headerData(
             index.column(), Qt.Orientation.Horizontal)
         current_text = index.data()
-        # if index.column() in [2, 3, 4]:
-        # self.prevText = index.data()
-        # list_to_give = self.lists[index.column()-2]
+
         dialog = ""
         if index.column() in [2, 3, 4]:
             dialog = ChooserPopUp(
@@ -505,17 +452,22 @@ class Functions(Ui_Dialog):
                 # self.pd_obj.editEntryCourse(idNumber, newInfo)
                 print(
                     f"idNumber: {idNumber}, newInfo: {newInfo}, header: {header}")
-                db.edit_student(idNumber, newInfo, header) if table == "students" else db.edit_course(
-                    idNumber, newInfo, header)
-                model.blockSignals(True)
-                item = QtGui.QStandardItem(newInfo)
-                model.setItem(
-                    index.row(), index.column(), item)
-                item.setEditable(False)
-                model.blockSignals(False)
-                if header == "course code":
-                    self.lists[2] = db.list_of_courses()
-                    self.editCourseNameinSTable(current_text, newInfo)
+                try:
+                    db.edit_student(idNumber, newInfo, header) if table == "students" else db.edit_course(
+                        idNumber, newInfo, header)
+                    model.blockSignals(True)
+                    item = QtGui.QStandardItem(newInfo)
+                    model.setItem(
+                        index.row(), index.column(), item)
+                    item.setEditable(False)
+                    model.blockSignals(False)
+                    if header == "course code" and table == "courses":
+                        self.lists[2] = db.list_of_courses()
+                        self.editCourseNameinSTable(current_text, newInfo)
+                except Exception as e:
+                    print(str(e))
+                    var = CustomWarningBox(Dialog, str(e))
+                    var.exec()
 
     def on_course_selection_changed(self, current_index, previous_index):
         print("course")
@@ -527,24 +479,12 @@ class Functions(Ui_Dialog):
     def handle_tab_changed(self, index):
         # False == student, True == course
         index = not index
-        # elementNum = 4 if index else 0
-        # i = 0 for widget in self.tabWidget.widget(index).children(): print(f"{widget.objectName()}: {i}") i += 1 print("-------------------------------")
         previous_tableview = self.tabWidget.widget(index).children()[0]
 
         previous_tableview.selectionModel().clearSelection()
         previous_tableview.clearFocus()
-        # self.lineEdit_name.setFocus() if index else self.addCourseCodeLine.setFocus()
         self.prevText = ""
         print(f"prevText = {self.prevText}")
-
-        '''
-        indx = model.indx(row, column)
-        selection = QItemSelection(indx, indx)
-        selection_model.clearSelection()
-        selection_model.select(
-            selection, QItemSelectionModel.SelectionFlag.Select)
-        view.scrollTo(indx, QTableView.ScrollHint.PositionAtCenter)
-        '''
 
     def editCourseNameinSTable(self, oldInfo, newInfo):
         print("\nupdateCourses called !!!")
