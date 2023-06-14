@@ -72,6 +72,8 @@ class Ui_Dialog(object):
         self.studentTable.setGeometry(QtCore.QRect(40, 240, 781, 441))
         self.studentTable.setStyleSheet(tableStyleSheet)
         self.studentTable.setObjectName("studentTable")
+        self.studentTable.horizontalHeader().setSectionResizeMode(
+            QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.editEntryButton = QtWidgets.QPushButton(parent=self.studentTab)
         self.editEntryButton.setGeometry(QtCore.QRect(620, 190, 81, 31))
         self.editEntryButton.setStyleSheet("border-radius: 5px;\n"
@@ -236,6 +238,8 @@ class Ui_Dialog(object):
         self.courseTable.setGeometry(QtCore.QRect(40, 150, 781, 531))
         self.courseTable.setStyleSheet(tableStyleSheet)
         self.courseTable.setObjectName("courseTable")
+        self.courseTable.horizontalHeader().setSectionResizeMode(
+            QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.addCourseLine = QtWidgets.QLineEdit(parent=self.courseTab)
         self.addCourseLine.setGeometry(QtCore.QRect(210, 80, 321, 31))
         self.addCourseLine.setStyleSheet("border-style: none;\n"
