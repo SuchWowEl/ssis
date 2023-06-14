@@ -49,6 +49,66 @@ tableStyleSheet = """
         """
 
 
+class CustomException(Exception):
+    pass
+
+
+class CustomWarningBox(QtWidgets.QDialog):
+    def __init__(self, parent, text):
+        super().__init__(parent)
+        self.setWindowTitle(f"Warning!")
+        self.setMinimumWidth(300)
+        self.setMinimumHeight(100)
+
+        layout = QtWidgets.QVBoxLayout()
+        self.label = QtWidgets.QLabel(text)
+        self.setLayout(layout)
+        layout.addWidget(self.label)
+
+        # self.exec()
+
+
+class EditPopUp(QtWidgets.QDialog):
+    lineedit_style = """
+                    QLineEdit {
+                        border-style: none;
+                        border-bottom-style: solid;
+                        border-width: 0 0 2px 0;
+                        border-color: rgb(71, 115, 154);
+                        color: white;
+                        background-color: transparent;
+                    }
+                    """
+
+    def __init__(self, parent, current_string, header):
+        super().__init__(parent)
+
+        # current_string = current_string.split()
+        self.setWindowTitle(f"Change {header}")
+        size = 475 if header == "name" else 200
+        self.setMinimumWidth(size)
+        self.setFixedHeight(100)
+
+        layout = QtWidgets.QHBoxLayout()
+        self.line = QtWidgets.QLineEdit(current_string)
+        self.line.setMaxLength(255)
+        self.line.setStyleSheet(self.lineedit_style)
+        ok_button = QtWidgets.QPushButton("OK")
+
+        layout.addWidget(self.line)
+        layout.addWidget(ok_button)
+        ok_button.clicked.connect(self.line_returner)
+        self.setLayout(layout)
+
+    def line_returner(self):
+        self.new_input = self.line.text()
+        self.accept()
+
+    def get_selected_item(self):
+        return self.new_input
+        # return self.combobox.currentText()
+
+
 class CoursePopUp(QtWidgets.QDialog):
     def __init__(self, parent, courseList, combo_string):
         super().__init__(parent)
@@ -95,17 +155,83 @@ class Functional(UI_Dialog):
         self.deleteCourseButton.clicked.connect(
             lambda header: self.delete_entry("course"))
         self.addCourseButton.clicked.connect(self.addCourseClicked)
-        self.studentModel.itemChanged.connect(
-            lambda item, header="": self.edit_cell(item, self.studentModel.headerData(item.column(), Qt.Orientation.Horizontal)))
+        # self.studentModel.itemChanged.connect(lambda item, header="": self.edit_cell(item, self.studentModel.headerData(item.column(), Qt.Orientation.Horizontal)))
         self.studentTable.selectionModel().currentChanged.connect(
             self.on_student_selection_changed)
-        self.studentTable.clicked.connect(self.set_prev_text)
-        self.courseModel.itemChanged.connect(
-            lambda item, header="": self.edit_cell(item, self.courseModel.headerData(item.column(), Qt.Orientation.Horizontal)))
+        # self.studentTable.clicked.connect(self.set_prev_text)
+        self.studentTable.doubleClicked.connect(
+            lambda index, table="students": self.trigger_popup(index, table))
+        # self.courseModel.itemChanged.connect(lambda item, header="": self.edit_cell(item, self.courseModel.headerData(item.column(), Qt.Orientation.Horizontal)))
         self.courseTable.selectionModel().currentChanged.connect(
             self.on_course_selection_changed)
+        self.courseTable.doubleClicked.connect(
+            lambda index, table="courses": self.trigger_popup(index, table))
 
         self.tabWidget.currentChanged.connect(self.handle_tab_changed)
+
+    def trigger_popup(self, index, table):
+        print(f"table == {table}")
+        row = index.row()
+        columnNumber = index.column()
+        # column = self.headers[columnNumber]
+        # new_text = item.text()
+        # print(f"new text is {new_text}")
+        previous_text = index.data()
+        model = self.studentModel if table == "students" else self.courseModel
+        header = model.headerData(
+            index.column(), Qt.Orientation.Horizontal)
+
+        dialog = ""
+        if index.column() == 2:
+            dialog = CoursePopUp(Dialog, self.courseList, previous_text)
+        else:
+            dialog = EditPopUp(Dialog, previous_text, header)
+        if dialog.exec() == 1:
+            newInfo = dialog.get_selected_item()
+        try:
+            if index.data() != newInfo:
+                if newInfo != "" and not newInfo.isspace():
+                    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+
+                    inCourse = not pd_obj.notInCSV(newInfo, "course", 0)
+                    inStudent = not pd_obj.notInCSV(newInfo, header, 1)
+                    if header == "course" and not inCourse and table == "courses":
+                        print("editCourse")
+                        print(f"{previous_text},{newInfo}")
+                        pd_obj.editCourse(previous_text, newInfo)
+                        self.courseModel.blockSignals(True)
+                        self.courseModel.item(
+                            row, columnNumber).setText(newInfo)
+                        self.courseModel.item(
+                            row, columnNumber).setEditable(False)
+                        self.courseModel.blockSignals(False)
+
+                        self.courseList[row] = self.prevText = newInfo
+                        self.editCourseNameinSTable(
+                            oldInfo=previous_text, newInfo=newInfo)
+                    elif header == "course" and inCourse and table == "courses":
+                        raise CustomException(
+                            f"Error: \"{newInfo}\" is duplicate")
+                    elif not inStudent:
+                        print("editEntry")
+                        print(f"{previous_text},{newInfo}, {header}")
+                        pd_obj.editEntry(previous_text,
+                                         newInfo, header)
+                        self.studentModel.blockSignals(True)
+                        self.studentModel.item(
+                            row, columnNumber).setText(newInfo)
+                        self.studentModel.item(
+                            row, columnNumber).setEditable(False)
+                        self.studentModel.blockSignals(False)
+                    elif inStudent:
+                        raise CustomException(
+                            f"Error: \"{newInfo}\" is duplicate")
+                else:
+                    raise CustomException("Error: input is blank")
+        except Exception as e:
+            print(str(e))
+            var = CustomWarningBox(Dialog, str(e))
+            var.exec()
 
     def addClicked(self):
         if self.lineEdit_name.text() and self.lineEdit_id.text() and self.comboBox.currentText():
@@ -281,7 +407,7 @@ class Functional(UI_Dialog):
         self.courseTable.horizontalHeader().setSectionResizeMode(
             QtWidgets.QHeaderView.ResizeMode.Stretch)
 
-        self.printTable()
+        # self.printTable()
 
         self.studentTable.setModel(self.studentModel)
         self.studentTable.setStyleSheet(tableStyleSheet)
