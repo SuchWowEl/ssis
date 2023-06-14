@@ -5,7 +5,9 @@ from PyQt6.QtCore import Qt
 # from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex
 # import pandasway_w_class as pd_obj
 import csv
+import re
 import mysqltest as db
+# from gui_V2 import Ui_Dialog
 from gui_V2 import Ui_Dialog
 import pandas as pd
 
@@ -29,6 +31,86 @@ class CustomWarningBox(QtWidgets.QDialog):
         layout.addWidget(self.label)
 
         # self.exec()
+
+
+class EditPopUp(QtWidgets.QDialog):
+    lineedit_style = """
+                    QLineEdit {
+                        border-style: none;
+                        border-bottom-style: solid;
+                        border-width: 0 0 2px 0;
+                        border-color: rgb(71, 115, 154);
+                        color: white;
+                        background-color: transparent;
+                    }
+                    """
+
+    def __init__(self, parent, current_string, header):
+        super().__init__(parent)
+        if header == "student id":
+            self.student_id_window(current_string, header)
+        else:
+            self.edit_window(current_string, header)
+
+    def edit_window(self, current_string, header):
+        # current_string = current_string.split()
+        self.setWindowTitle(f"Change {header}")
+        size = 475 if header in ["course", "name"] else 200
+        self.setMinimumWidth(size)
+        self.setFixedHeight(100)
+
+        layout = QtWidgets.QHBoxLayout()
+        print(f"IT IS {current_string}")
+        self.line = QtWidgets.QLineEdit(current_string)
+        self.line.setMaxLength(255)
+        self.line.setStyleSheet(self.lineedit_style)
+        ok_button = QtWidgets.QPushButton("OK")
+
+        layout.addWidget(self.line)
+        layout.addWidget(ok_button)
+        ok_button.clicked.connect(self.line_returner)
+        self.setLayout(layout)
+
+    def student_id_window(self, current_string, header):
+        self.setWindowTitle("Change ID number")
+        self.setFixedWidth(200)
+        self.setFixedHeight(100)
+        whew = self.lineedit_style
+
+        layout = QtWidgets.QHBoxLayout()
+        self.id = QtWidgets.QLineEdit(current_string[:4])
+        self.id.setStyleSheet(self.lineedit_style)
+        self.dash = QtWidgets.QLabel("-")
+        self.id2 = QtWidgets.QLineEdit(current_string[5:])
+        self.id2.setStyleSheet(self.lineedit_style)
+        self.id.setMaxLength(4)
+        self.id2.setMaxLength(4)
+
+        validator = QtGui.QIntValidator()
+        self.id.setValidator(validator)
+        self.id2.setValidator(validator)
+
+        ok_button = QtWidgets.QPushButton("OK")
+
+        layout.addWidget(self.id)
+        layout.addWidget(self.dash)
+        layout.addWidget(self.id2)
+        # layout.addWidget(self.combobox)
+        layout.addWidget(ok_button)
+        ok_button.clicked.connect(self.id_returner)
+        self.setLayout(layout)
+
+    def line_returner(self):
+        self.new_input = self.line.text()
+        self.accept()
+
+    def id_returner(self):
+        self.new_input = f"{self.id.text()}-{self.id2.text()}"
+        self.accept()
+
+    def get_selected_item(self):
+        return self.new_input
+        # return self.combobox.currentText()
 
 
 class ChooserPopUp(QtWidgets.QDialog):
@@ -64,15 +146,39 @@ class Functions(Ui_Dialog):
                 item = QtGui.QStandardItem(
                     str(tuples[row][column]))
                 model.setItem(row, column, item)
-                if column == 4:
-                    item.setEditable(False)
+                item.setEditable(False)
         return model
+
+    def table_to_QSIM2(self, model, tuples):
+        # model = QtGui.QStandardItemModel()
+        print("table_to_QSIM2")
+        for row in range(len(tuples)):
+            for column in range(len(tuples[0])):
+                item = QtGui.QStandardItem(
+                    str(tuples[row][column]))
+                model.setItem(row, column, item)
+                print(model.index(row, column).data(0))
+                item.setEditable(False)
+        # return model
 
     def __init__(self, Dialog):
         super().__init__(Dialog)
 
         # self.studentsCSV = self.table_to_QSIM(db.table_for_students())
         # self.courseCSV = self.table_to_QSIM(db.table_for_courses())
+        validator = QtGui.QIntValidator()
+        self.lineEdit_id.setValidator(validator)
+        self.lineEdit_id_2.setValidator(validator)
+
+        # QtGui.QRegularExpressionValidator
+        '''
+        self.lineEdit_fname.setValidator(
+            QtGui.QRegularExpressionValidator(QtCore.QRegularExpression("[a-zA-Z]+")))
+        self.lineEdit_mi.setValidator(
+            QtGui.QRegularExpressionValidator(QtCore.QRegularExpression("[a-zA-Z]+")))
+        self.lineEdit_lname.setValidator(
+            QtGui.QRegularExpressionValidator(QtCore.QRegularExpression("[a-zA-Z]+")))
+        '''
 
         self.studentModel = self.table_to_QSIM(db.table_for_students())
         self.courseModel = self.table_to_QSIM(db.table_for_courses())
@@ -92,6 +198,13 @@ class Functions(Ui_Dialog):
         self.modelSetter()
         self.setFunctions()
 
+    def cell_clicked(self, index, table):
+        # message = f"Clicked cell at index: {row}, {column}"
+        # table = "students"
+        model = self.studentModel if table == "students" else self.courseModel
+        self.prevText = model.index(index.row(), index.column()).data(0)
+        print(f"cell_clicked: {self.prevText}")
+
     def setFunctions(self):
         self.comboBox.insertItems(1, self.lists[2])
         self.GcomboBox.insertItems(1, self.gender)
@@ -107,14 +220,26 @@ class Functions(Ui_Dialog):
 
         self.studentModel.itemChanged.connect(
             lambda item, table="students": self.edit_cell(item, self.studentModel.headerData(item.column(), Qt.Orientation.Horizontal), table))
+        self.studentTable.doubleClicked.connect(
+            lambda index, table="students": self.trigger_popup(index, table))
         self.studentTable.selectionModel().currentChanged.connect(
             self.on_student_selection_changed)
-        self.studentTable.clicked.connect(self.trigger_popup)
+        self.studentTable.clicked.connect(
+            lambda index: self.cell_clicked(index, "students"))
         self.courseModel.itemChanged.connect(
             lambda item, table="courses": self.edit_cell(item, self.courseModel.headerData(item.column(), Qt.Orientation.Horizontal), table))
+        self.courseTable.doubleClicked.connect(
+            lambda index, table="courses": self.trigger_popup(index, table))
         self.courseTable.selectionModel().currentChanged.connect(
             self.on_course_selection_changed)
+        self.courseTable.clicked.connect(
+            lambda index: self.cell_clicked(index, "courses"))
         self.tabWidget.currentChanged.connect(self.handle_tab_changed)
+
+        self.editEntryButton.clicked.connect(
+            lambda table: self.updateModels("students"))
+        self.editCourseButton.clicked.connect(
+            lambda table="courses": self.updateModels(table))
 
     def modelSetter(self):
         self.studentModel.blockSignals(True)
@@ -133,33 +258,39 @@ class Functions(Ui_Dialog):
         self.courseTable.setModel(self.courseModel)
 
     def addClicked(self):
-        if self.lineEdit_name.text() and self.lineEdit_id.text() and self.comboBox.currentText():
-            try:
-                arrey = [self.lineEdit_id.text(), self.lineEdit_name.text(), self.GcomboBox.currentText(
-                ), self.YcomboBox.currentText(), self.comboBox.currentText()]
-                print(arrey)
-                # print(db.duplicate_checker("student id", arrey[0], "students"))
-                print(self.lists[2])
-                # if db.duplicate_checker("student id", arrey[0], "students") is None:
-                # ----------------------------------------------------------------------------------------------------------------------------------------------
-                db.add_row(arrey)
-                num_rows = self.studentModel.rowCount()
-                self.studentModel.insertRow(num_rows)
-                self.studentModel.blockSignals(True)
+        try:
+            arrey = [f"{self.lineEdit_id.text()}-{self.lineEdit_id_2.text()}", self.lineEdit_name.text(), self.GcomboBox.currentText(
+            ), self.YcomboBox.currentText(), self.comboBox.currentText()]
+            if any(element == "" for element in arrey) or any(item.isspace() for item in arrey):
+                # if all(arrey) and not any(i.isspace() for i in arrey):
+                raise CustomException("Please fill all the fields")
+            # arrey = [self.lineEdit_id.text(), self.lineEdit_name.text(), self.GcomboBox.currentText(
+            # ), self.YcomboBox.currentText(), self.comboBox.currentText()]
+            print(arrey)
+            # print(db.duplicate_checker("student id", arrey[0], "students"))
+            print(self.lists[2])
+            # if db.duplicate_checker("student id", arrey[0], "students") is None:
+            # ----------------------------------------------------------------------------------------------------------------------------------------------
+            db.add_row(arrey)
+            num_rows = self.studentModel.rowCount()
+            self.studentModel.insertRow(num_rows)
+            self.studentModel.blockSignals(True)
 
-                for column in range(self.studentModel.columnCount()):
-                    self.prevText = arrey[column]
-                    item = QtGui.QStandardItem(arrey[column])
-                    self.studentModel.setItem(num_rows, column, item)
-                    if column in [2, 3, 4]:
-                        self.studentModel.itemFromIndex(
-                            self.studentModel.index(num_rows, column)).setEditable(False)
-                self.studentModel.sort(0, Qt.SortOrder.AscendingOrder)
+            for column in range(self.studentModel.columnCount()):
+                self.prevText = arrey[column]
+                item = QtGui.QStandardItem(arrey[column])
+                item.setEditable(False)
+                self.studentModel.setItem(num_rows, column, item)
+                '''
+                if column in [2, 3, 4]:
+                    self.studentModel.itemFromIndex(
+                        self.studentModel.index(num_rows, column)).setEditable(False)
+                        '''
 
-                self.studentModel.blockSignals(False)
-            except Exception as e:
-                var = CustomWarningBox(Dialog, text=str(e))
-                var.exec()
+            self.studentModel.blockSignals(False)
+        except Exception as e:
+            var = CustomWarningBox(Dialog, text=str(e))
+            var.exec()
 # ----------------------------------------------------------------------------------------------------------------------------------------------
 
     def search_table(self):
@@ -225,8 +356,6 @@ class Functions(Ui_Dialog):
                 db.delete_course(primary_key)
                 self.delete_rows(rows_to_remove, "course code")
                 rows_to_remove = self.student_id_in_course(primary_key)
-
-                model.sort(1, Qt.SortOrder.AscendingOrder)
                 self.lists[2] = db.list_of_courses()
 
                 self.comboBox.clear()
@@ -245,11 +374,15 @@ class Functions(Ui_Dialog):
             model = self.courseModel
             header = self.headers2
             tableview = self.courseTable
+            self.lists[2] = db.list_of_courses()
+            self.comboBox.clear()
+            self.comboBox.addItems(self.lists[2])
 
         model.blockSignals(True)
 
-        model = self.table_to_QSIM(table_db)
-        header = db.headers_of_table(table)
+        # model = self.table_to_QSIM(table_db)
+        self.table_to_QSIM2(model, table_db)
+        # header = db.headers_of_table(table)
         model.setHorizontalHeaderLabels(header)
         tableview.setModel(model)
 
@@ -286,12 +419,12 @@ class Functions(Ui_Dialog):
                     self.prevText = arrey[column]
                     item = QtGui.QStandardItem(arrey[column])
                     self.courseModel.setItem(num_rows, column, item)
-                self.courseModel.sort(1, Qt.SortOrder.AscendingOrder)
 
                 self.courseModel.blockSignals(False)
-                self.lists[2] = db.list_of_courses()
-                self.comboBox.clear()
-                self.comboBox.addItems(self.lists[2])
+                self.lists[2].append(self.addCourseCodeLine.text())
+                # self.lists[2] = db.list_of_courses()
+                # self.comboBox.clear()
+                self.comboBox.addItem(self.addCourseCodeLine.text())
             except Exception as e:
                 var = CustomWarningBox(Dialog, str(e))
                 var.exec()
@@ -309,23 +442,20 @@ class Functions(Ui_Dialog):
         # print(f"conditional is: {not new_text.isspace() and db.duplicate_checker(column, new_text, table) is None}")
 
         try:
-            if (new_text != ""):
+            if (new_text != "" and previous_text != ""):
+                print(f"{previous_text}")
                 if not new_text.isspace() and db.duplicate_checker(column, new_text, table) is None:
                     key = previous_text if column == "course code" or column == "student id" else key_value
                     db.edit_course(key, new_text, column) if table == "courses" else db.edit_student(
                         key, new_text, column)
-                    if key == previous_text:
-                        if table == "students":
-                            model.sort(
-                                0, Qt.SortOrder.AscendingOrder)
-                        if table == "courses":
-                            print(f"new_text: {new_text}")
-                            self.lists[2] = db.list_of_courses()
-                            # self.courseList[row] = self.prevText = new_text
-                            self.editCourseNameinSTable(
-                                previous_text, new_text)
-                    if column == "course":
-                        model.sort(1, Qt.SortOrder.AscendingOrder)
+                    # if key == previous_text:
+                    if column == "course code":
+                        print(f"new_text: {new_text}")
+                        # self.lists[2] = [new_text if item == previous_text else item for item in self.lists[2]]
+                        self.lists[2] = db.list_of_courses()
+                        # self.courseList[row] = self.prevText = new_text
+                        self.editCourseNameinSTable(
+                            previous_text, new_text)
                     self.prevText = new_text
                 else:
                     raise CustomException(
@@ -337,40 +467,58 @@ class Functions(Ui_Dialog):
             model.blockSignals(True)
             model.itemFromIndex(model.index(
                 row, columnNumber)).setText(previous_text)
+            print("WOIIIIIIIIIIIIIIIIs")
             model.blockSignals(False)
             var = CustomWarningBox(Dialog, str(e))
             var.exec()
 
     def on_student_selection_changed(self, current_index, previous_index):
+        print("student")
         column = current_index.column()
         row = current_index.row()
         self.prevText = self.studentModel.data(current_index)
         print(
             f"Selected cell({column}, {row}): '{self.prevText}'")
 
-    def trigger_popup(self, index):
+    def trigger_popup(self, index, table):
+        print(f"table == {table}")
+        model = self.studentModel if table == "students" else self.courseModel
+        etable = self.studentTable if table == "students" else self.courseTable
+        header = model.headerData(
+            index.column(), Qt.Orientation.Horizontal)
+        current_text = index.data()
+        # if index.column() in [2, 3, 4]:
+        # self.prevText = index.data()
+        # list_to_give = self.lists[index.column()-2]
+        dialog = ""
         if index.column() in [2, 3, 4]:
-            # self.prevText = index.data()
-            list_to_give = self.lists[index.column()-2]
-            current_text = index.data()
-            header = self.studentModel.headerData(
-                index.column(), Qt.Orientation.Horizontal)
-            dialog = ChooserPopUp(Dialog, list_to_give, index.data(), header)
-            if dialog.exec() == 1:
-                newInfo = dialog.get_selected_item()
-                if index.data() != newInfo:
-                    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-                    idNumber = self.studentTable.model().index(
-                        index.row(), 0).data()
-                    # self.pd_obj.editEntryCourse(idNumber, newInfo)
-                    db.edit_student(idNumber, newInfo, header)
-                    self.studentModel.blockSignals(True)
-                    item = QtGui.QStandardItem(newInfo)
-                    self.studentModel.setItem(
-                        index.row(), index.column(), item)
-                    self.studentModel.blockSignals(False)
+            dialog = ChooserPopUp(
+                Dialog, self.lists[index.column()-2], index.data(), header)
+        else:
+            dialog = EditPopUp(Dialog, current_text, header)
+        if dialog.exec() == 1:
+            newInfo = dialog.get_selected_item()
+            if index.data() != newInfo:
+                print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                idNumber = etable.model().index(
+                    index.row(), 0).data()
+                # self.pd_obj.editEntryCourse(idNumber, newInfo)
+                print(
+                    f"idNumber: {idNumber}, newInfo: {newInfo}, header: {header}")
+                db.edit_student(idNumber, newInfo, header) if table == "students" else db.edit_course(
+                    idNumber, newInfo, header)
+                model.blockSignals(True)
+                item = QtGui.QStandardItem(newInfo)
+                model.setItem(
+                    index.row(), index.column(), item)
+                item.setEditable(False)
+                model.blockSignals(False)
+                if header == "course code":
+                    self.lists[2] = db.list_of_courses()
+                    self.editCourseNameinSTable(current_text, newInfo)
 
     def on_course_selection_changed(self, current_index, previous_index):
+        print("course")
         column = current_index.column()
         row = current_index.row()
         self.prevText = self.courseModel.data(current_index)
@@ -385,7 +533,18 @@ class Functions(Ui_Dialog):
 
         previous_tableview.selectionModel().clearSelection()
         previous_tableview.clearFocus()
-        self.lineEdit_name.setFocus() if index else self.addCourseCodeLine.setFocus()
+        # self.lineEdit_name.setFocus() if index else self.addCourseCodeLine.setFocus()
+        self.prevText = ""
+        print(f"prevText = {self.prevText}")
+
+        '''
+        indx = model.indx(row, column)
+        selection = QItemSelection(indx, indx)
+        selection_model.clearSelection()
+        selection_model.select(
+            selection, QItemSelectionModel.SelectionFlag.Select)
+        view.scrollTo(indx, QTableView.ScrollHint.PositionAtCenter)
+        '''
 
     def editCourseNameinSTable(self, oldInfo, newInfo):
         print("\nupdateCourses called !!!")
