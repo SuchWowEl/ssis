@@ -101,12 +101,26 @@ class EditPopUp(QtWidgets.QDialog):
         self.setLayout(layout)
 
     def line_returner(self):
-        self.new_input = self.line.text()
-        self.accept()
+        try:
+            if self.line.text() != "" or not self.line.text().isspace():
+                self.new_input = self.line.text()
+                self.accept()
+            else:
+                self.new_input = ""
+                raise CustomException("Error: fix input")
+        except Exception as e:
+            self.accept()
 
     def id_returner(self):
-        self.new_input = f"{self.id.text()}-{self.id2.text()}"
-        self.accept()
+        try:
+            if all(id != "" and len(id) == 4 for id in [self.id.text(), self.id2.text()]):
+                self.new_input = f"{self.id.text()}-{self.id2.text()}"
+                self.accept()
+            else:
+                self.new_input = ""
+                raise CustomException("Error: fix input")
+        except Exception as e:
+            self.accept()
 
     def get_selected_item(self):
         return self.new_input
@@ -443,16 +457,18 @@ class Functions(Ui_Dialog):
                 Dialog, self.lists[index.column()-2], index.data(), header)
         else:
             dialog = EditPopUp(Dialog, current_text, header)
-        if dialog.exec() == 1:
-            newInfo = dialog.get_selected_item()
-            if index.data() != newInfo:
-                print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-                idNumber = etable.model().index(
-                    index.row(), 0).data()
-                # self.pd_obj.editEntryCourse(idNumber, newInfo)
-                print(
-                    f"idNumber: {idNumber}, newInfo: {newInfo}, header: {header}")
-                try:
+        try:
+            if dialog.exec() == 1:
+                newInfo = dialog.get_selected_item()
+                if newInfo == "":
+                    raise CustomException("Error: Fix input")
+                if index.data() != newInfo:
+                    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                    idNumber = etable.model().index(
+                        index.row(), 0).data()
+                    # self.pd_obj.editEntryCourse(idNumber, newInfo)
+                    print(
+                        f"idNumber: {idNumber}, newInfo: {newInfo}, header: {header}")
                     db.edit_student(idNumber, newInfo, header) if table == "students" else db.edit_course(
                         idNumber, newInfo, header)
                     model.blockSignals(True)
@@ -464,10 +480,10 @@ class Functions(Ui_Dialog):
                     if header == "course code" and table == "courses":
                         self.lists[2] = db.list_of_courses()
                         self.editCourseNameinSTable(current_text, newInfo)
-                except Exception as e:
-                    print(str(e))
-                    var = CustomWarningBox(Dialog, str(e))
-                    var.exec()
+        except Exception as e:
+            print(str(e))
+            var = CustomWarningBox(Dialog, str(e))
+            var.exec()
 
     def on_course_selection_changed(self, current_index, previous_index):
         print("course")
