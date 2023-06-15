@@ -390,7 +390,7 @@ class Functions(Ui_Dialog):
 
         model.blockSignals(False)
         warning = CustomWarningBox(
-            Dialog, "Hover mouse to table to complete update")
+            Dialog, "Refresh is successful")
         warning.exec()
 
     def addCourseClicked(self):
@@ -466,7 +466,6 @@ class Functions(Ui_Dialog):
                     print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                     idNumber = etable.model().index(
                         index.row(), 0).data()
-                    # self.pd_obj.editEntryCourse(idNumber, newInfo)
                     print(
                         f"idNumber: {idNumber}, newInfo: {newInfo}, header: {header}")
                     db.edit_student(idNumber, newInfo, header) if table == "students" else db.edit_course(
