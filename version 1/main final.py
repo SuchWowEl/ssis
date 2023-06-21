@@ -285,7 +285,7 @@ class Functional(UI_Dialog):
                             row, columnNumber).setEditable(False)
                         self.studentModel.blockSignals(False)
                 else:
-                    raise CustomException("Error: input is blank")
+                    raise CustomException("Error: Please fix input")
         except Exception as e:
             print(str(e))
             var = CustomWarningBox(Dialog, str(e))
