@@ -293,7 +293,6 @@ class Functions(Ui_Dialog):
         except Exception as e:
             var = CustomWarningBox(Dialog, text=str(e))
             var.exec()
-# ----------------------------------------------------------------------------------------------------------------------------------------------
 
     def search_table(self):
         if self.pushButton_3.text() is not None:
