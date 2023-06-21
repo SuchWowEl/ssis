@@ -10,7 +10,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt
 # from PySide6.QtWidgets import QTableView, QApplication, QMessageBox
 # from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex
-import pandasway_w_class as pd_obj
+from pandasway_w_class import pd_obj
 import csv
 import pandas as pd
 import os
@@ -138,7 +138,7 @@ class EditPopUp(QtWidgets.QDialog):
     def line_returner(self):
         try:
             if self.line.text() != "" or not self.line.text().isspace():
-                self.new_input = self.line.text()
+                self.new_input = self.line.text().strip()
                 self.accept()
             else:
                 self.new_input = ""
@@ -193,8 +193,6 @@ class Functional(UI_Dialog):
     courseCSV = pd.read_csv(courseFile)
     courseList = courseCSV['course'].tolist()
     model = QtGui.QStandardItemModel()
-    '''1 is for student, 0 for course table'''
-    tableMode = 1
 
     def __init__(self, Dialog):
         super().__init__(Dialog)
@@ -209,14 +207,12 @@ class Functional(UI_Dialog):
             lambda header: self.delete_entry("course"))
         self.addCourseButton.clicked.connect(self.addCourseClicked)
         # self.studentModel.itemChanged.connect(lambda item, header="": self.edit_cell(item, self.studentModel.headerData(item.column(), Qt.Orientation.Horizontal)))
-        self.studentTable.selectionModel().currentChanged.connect(
-            self.on_student_selection_changed)
+        # self.studentTable.selectionModel().currentChanged.connect(self.on_student_selection_changed)
         # self.studentTable.clicked.connect(self.set_prev_text)
         self.studentTable.doubleClicked.connect(
             lambda index, table="students": self.trigger_popup(index, table))
         # self.courseModel.itemChanged.connect(lambda item, header="": self.edit_cell(item, self.courseModel.headerData(item.column(), Qt.Orientation.Horizontal)))
-        self.courseTable.selectionModel().currentChanged.connect(
-            self.on_course_selection_changed)
+        # self.courseTable.selectionModel().currentChanged.connect(self.on_course_selection_changed)
         self.courseTable.doubleClicked.connect(
             lambda index, table="courses": self.trigger_popup(index, table))
 
@@ -292,41 +288,48 @@ class Functional(UI_Dialog):
             var.exec()
 
     def addClicked(self):
-        if self.lineEdit_name.text() and self.lineEdit_id.text() and self.lineEdit_id_2.text() and self.comboBox.currentText():
-            if all(id != "" and len(id) == 4 for id in [self.lineEdit_id.text(), self.lineEdit_id_2.text()]):
-                arrey = [self.lineEdit_name.text(), f"{self.lineEdit_id.text()}-{self.lineEdit_id_2.text()}",
-                         self.comboBox.currentText()]
-                print(arrey)
-                if (not pd_obj.studentInCSV(arrey)):
-                    pd_obj.addEntry(arrey)
+        # if self.lineEdit_name.text() and self.lineEdit_id.text() and self.lineEdit_id_2.text() and self.comboBox.currentText():
+        try:
+            if all(text and not text.isspace() for text in [self.lineEdit_name.text(), self.lineEdit_id.text(), self.lineEdit_id_2.text(), self.comboBox.currentText()]):
+                if all(len(id) == 4 for id in [self.lineEdit_id.text(), self.lineEdit_id_2.text()]):
+                    arrey = [self.lineEdit_name.text().strip(), f"{self.lineEdit_id.text()}-{self.lineEdit_id_2.text()}",
+                             self.comboBox.currentText()]
+                    print(arrey)
+                    if (not pd_obj.studentInCSV(arrey)):
+                        pd_obj.addEntry(arrey)
 
-                    num_rows = self.studentModel.rowCount()
+                        num_rows = self.studentModel.rowCount()
 
-                    self.studentModel.insertRow(num_rows)
+                        self.studentModel.insertRow(num_rows)
 
-                    for column in range(self.studentModel.columnCount()):
-                        self.prevText = arrey[column]
-                        item = QtGui.QStandardItem(arrey[column])
-                        self.studentModel.setItem(num_rows, column, item)
-                        item.setEditable(False)
+                        for column in range(self.studentModel.columnCount()):
+                            self.prevText = arrey[column]
+                            item = QtGui.QStandardItem(arrey[column])
+                            self.studentModel.setItem(num_rows, column, item)
+                            item.setEditable(False)
+            else:
+                raise CustomException("Please fix input")
+        except Exception as e:
+            print(str(e))
+            var = CustomWarningBox(Dialog, str(e))
+            var.exec()
 
     def search_table(self):
-        if self.pushButton_3.text() is not None:
-            search_string = self.lineEdit_name_3.text()
-            # self.studentsCSV = pd.read_csv(studentsFile)
-            for row in range(self.studentModel.rowCount()):
-                match_found = False
-                for column in range(self.studentModel.columnCount()-1):
-                    print(
-                        f"KOBEEE {self.studentModel.index(row, column).data(0)}")
-                    temp = self.studentModel.index(row, column).data(0)
-                    if temp is not None and search_string.lower() in temp.strip().lower():
-                        match_found = True
-                        break
-                if match_found:
-                    self.studentTable.setRowHidden(row, False)
-                else:
-                    self.studentTable.setRowHidden(row, True)
+        search_string = self.lineEdit_name_3.text()
+        # self.studentsCSV = pd.read_csv(studentsFile)
+        for row in range(self.studentModel.rowCount()):
+            match_found = False
+            for column in range(self.studentModel.columnCount()-1):
+                print(
+                    f"KOBEEE {self.studentModel.index(row, column).data(0)}")
+                temp = self.studentModel.index(row, column).data(0)
+                if temp and search_string.lower() in temp.strip().lower():
+                    match_found = True
+                    break
+            if match_found:
+                self.studentTable.setRowHidden(row, False)
+            else:
+                self.studentTable.setRowHidden(row, True)
 
     def delete_rows(self, arr, header):
         currentModel = self.studentModel if header != "course" else self.courseModel
@@ -383,12 +386,12 @@ class Functional(UI_Dialog):
 
     def addCourseClicked(self):
         print(
-            f"{not (self.addCourseLine.text() is None or not self.addCourseLine.text())}")
-        print(f"{self.addCourseLine.text() in self.courseList}")
-        if not (self.addCourseLine.text() in self.courseList) and not (self.addCourseLine.text() is None or not self.addCourseLine.text()):
-            pd_obj.addCourse(self.addCourseLine.text())
+            f"{not (self.addCourseLine.text().strip() is None or not self.addCourseLine.text().strip())}")
+        print(f"{self.addCourseLine.text().strip() in self.courseList}")
+        if not (self.addCourseLine.text().strip() in self.courseList) and not (self.addCourseLine.text().strip() is None or not self.addCourseLine.text()):
+            pd_obj.addCourse(self.addCourseLine.text().strip())
             self.courseModel.appendRow(
-                [QtGui.QStandardItem(self.addCourseLine.text())])
+                [QtGui.QStandardItem(self.addCourseLine.text().strip())])
 
             index = self.courseModel.index(
                 self.courseModel.rowCount()-1, self.courseModel.columnCount()-1)
@@ -407,42 +410,6 @@ class Functional(UI_Dialog):
         self.studentModel = self.setModelStudent(self.studentsCSV)
         self.courseModel = self.setModelStudent(self.courseCSV)
         self.modelSetter()
-
-    def printTable(self):
-        # if self.tableMode == 1:
-        for row in range(self.studentModel.rowCount()):
-            for column in range(self.studentModel.columnCount()-1):
-                index = self.studentModel.index(row, column)
-                item = self.studentModel.itemFromIndex(index)
-                print(item.text())
-                self.studentModel.setItem(row, column, item)
-                if column == 2:
-                    item.setEditable(False)
-        '''
-        for row in range(self.studentModel.rowCount()):
-            index = self.studentModel.index(row, 2)
-            item = self.studentModel.itemFromIndex(index)
-            item.setEditable(False)
-        '''
-
-        for row in range(self.courseModel.rowCount()):
-            index = self.courseModel.index(row, 0)
-            item = self.courseModel.itemFromIndex(index)
-            self.courseModel.setItem(row, 0, item)
-
-    def on_student_selection_changed(self, current_index, previous_index):
-        column = current_index.column()
-        row = current_index.row()
-        self.prevText = self.studentModel.data(current_index)
-        print(
-            f"Selected cell: column={column}, row={row}, text='{self.prevText}'")
-
-    def on_course_selection_changed(self, current_index, previous_index):
-        column = current_index.column()
-        row = current_index.row()
-        self.prevText = self.courseModel.data(current_index)
-        print(
-            f"Selected cell: column={column}, row={row}, text='{self.prevText}'")
 
     def handle_tab_changed(self, index):
         index = not index
@@ -465,9 +432,6 @@ class Functional(UI_Dialog):
         self.courseTable.horizontalHeader().setSectionResizeMode(
             QtWidgets.QHeaderView.ResizeMode.Stretch)
 
-        # self.printTable()
-
-        # self.studentTable.setModel(self.studentModel)
         self.studentTable.setStyleSheet(tableStyleSheet)
         self.courseTable.setStyleSheet(tableStyleSheet)
 
@@ -485,65 +449,6 @@ class Functional(UI_Dialog):
 
         self.comboBox.clear()
         self.comboBox.addItems(self.courseList)
-
-    def edit_cell(self, item, header):
-        print("edit_cellllll")
-        row = item.row()
-        columnNumber = item.column()
-        column = self.headers[columnNumber]
-        new_text = item.text()
-        print(f"new text is {new_text}")
-        previous_text = self.prevText if self.prevText != "" else new_text
-        inCourse = not pd_obj.notInCSV(new_text, "course", 0)
-        inStudent = not pd_obj.notInCSV(new_text, column, 1)
-        if previous_text != new_text:
-            if new_text != "":
-                if header == "course" and not inCourse:
-                    print("editCourse")
-                    pd_obj.editCourse(previous_text, new_text)
-                    self.courseList[row] = self.prevText = new_text
-                    self.editCourseNameinSTable(
-                        oldInfo=previous_text, newInfo=new_text)
-                elif header == "course" and inCourse:
-                    print("editCourse failed")
-                    self.courseModel.blockSignals(True)
-                    self.courseModel.item(
-                        row, columnNumber).setText(previous_text)
-                    self.courseModel.blockSignals(False)
-                elif not inStudent:
-                    print("editEntry")
-                    pd_obj.editEntry(previous_text,
-                                     new_text, column)
-                    # pd_obj.editEntry(self, previous_text, new_text, 'course')
-                elif inStudent:
-                    print("editEntry failed")
-                    self.studentModel.blockSignals(True)
-                    self.studentModel.item(
-                        row, columnNumber).setText(previous_text)
-                    self.studentModel.blockSignals(False)
-                self.prevText = new_text
-                print(f"self.prevText: {self.prevText}")
-
-            else:
-                print("text failed")
-                print(
-                    f"column is {column}, while previous_text is {previous_text}")
-                print(f"new_text is {new_text}")
-                prevInStudent = not pd_obj.notInCSV(
-                    previous_text, column, 1)
-                prevInCourse = not pd_obj.notInCSV(
-                    previous_text, "course", 0)
-                if prevInStudent:
-                    self.studentModel.blockSignals(True)
-                    self.studentModel.item(
-                        row, columnNumber).setText(previous_text)
-                    self.studentModel.blockSignals(False)
-                elif prevInCourse:
-                    self.courseModel.blockSignals(True)
-                    self.courseModel.item(
-                        row, columnNumber).setText(previous_text)
-                    self.courseModel.blockSignals(False)
-        print(self.courseList)
 
     def set_prev_text(self, index):
         if index.column() == 2:
@@ -567,63 +472,6 @@ class Functional(UI_Dialog):
         validator = QtGui.QIntValidator()
         self.lineEdit_id.setValidator(validator)
         self.lineEdit_id_2.setValidator(validator)
-
-        # ----------------------------------------------------------------------------------
-        '''
-        self.label_9 = QtWidgets.QLabel(parent=self.studentTab)
-        self.label_9.setGeometry(QtCore.QRect(20, 10, 411, 31))
-        font = QtGui.QFont()
-        font.setPointSize(13)
-        self.label_9.setFont(font)
-        self.label_9.setStyleSheet("color: rgb(245, 241, 224);")
-        self.label_9.setObjectName("label_9")
-        self.label = QtWidgets.QLabel(parent=self.courseTab)
-        self.label.setGeometry(QtCore.QRect(20, 10, 411, 31))
-        font = QtGui.QFont()
-        font.setPointSize(13)
-        self.label.setFont(font)
-        self.label.setStyleSheet("color: rgb(245, 241, 224);")
-        self.label.setObjectName("label")
-        self.tabWidget.addTab(self.courseTab, "")
-
-        self.retranslateUi(Dialog)
-        self.tabWidget.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(Dialog)
-        '''
-
-    def retranslateUi(self, Dialog):
-        _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        # self.editEntryButton.setText(_translate("Dialog", "EDIT: OFF"))
-        self.deleteStudentButton.setText(_translate("Dialog", "DELETE ENTRY"))
-        self.label_9.setText(_translate(
-            "Dialog", "Simple Student Information System (SSIS)"))
-        self.lineEdit_name_3.setPlaceholderText(
-            _translate("Dialog", "Enter Name or ID"))
-        self.label_8.setText(_translate("Dialog", "  Search"))
-        self.pushButton_3.setText(_translate("Dialog", "SEARCH"))
-        self.groupBox_4.setTitle(_translate("Dialog", "Add Student"))
-        self.lineEdit_name.setPlaceholderText(
-            _translate("Dialog", "Enter name of student"))
-        self.label_2.setText(_translate("Dialog", "   Name"))
-        self.pushButton.setText(_translate("Dialog", "ADD"))
-        self.lineEdit_id.setPlaceholderText(
-            _translate("Dialog", "Enter ID of student"))
-        self.label_4.setText(_translate("Dialog", "       ID"))
-        self.label_3.setText(_translate("Dialog", "      Course"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(
-            self.studentTab), _translate("Dialog", "Student"))
-        self.addCourseLine.setPlaceholderText(
-            _translate("Dialog", "Add Course"))
-        self.courseLabel.setText(_translate("Dialog", "  Course"))
-        self.addCourseButton.setText(_translate("Dialog", "ADD"))
-        self.label.setText(_translate(
-            "Dialog", "Simple Student Information System (SSIS)"))
-        # self.editCourseButton.setText(_translate("Dialog", "EDIT: OFF"))
-        self.deleteCourseButton.setText(
-            _translate("Dialog", "DELETE ENTRY"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(
-            self.courseTab), _translate("Dialog", "Course"))
 
 
 if __name__ == "__main__":
