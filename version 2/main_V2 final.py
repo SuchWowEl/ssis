@@ -103,7 +103,7 @@ class EditPopUp(QtWidgets.QDialog):
     def line_returner(self):
         try:
             if self.line.text() != "" or not self.line.text().isspace():
-                self.new_input = self.line.text()
+                self.new_input = self.line.text().strip()
                 self.accept()
             else:
                 self.new_input = ""
@@ -163,18 +163,6 @@ class Functions(Ui_Dialog):
                 item.setEditable(False)
         return model
 
-    def table_to_QSIM2(self, model, tuples):
-        # model = QtGui.QStandardItemModel()
-        print("table_to_QSIM2")
-        for row in range(len(tuples)):
-            for column in range(len(tuples[0])):
-                item = QtGui.QStandardItem(
-                    str(tuples[row][column]))
-                model.setItem(row, column, item)
-                print(model.index(row, column).data(0))
-                item.setEditable(False)
-        # return model
-
     def __init__(self, Dialog):
         super().__init__(Dialog)
 
@@ -212,13 +200,6 @@ class Functions(Ui_Dialog):
         self.modelSetter()
         self.setFunctions()
 
-    def cell_clicked(self, index, table):
-        # message = f"Clicked cell at index: {row}, {column}"
-        # table = "students"
-        model = self.studentModel if table == "students" else self.courseModel
-        self.prevText = model.index(index.row(), index.column()).data(0)
-        print(f"cell_clicked: {self.prevText}")
-
     def setFunctions(self):
         self.comboBox.insertItems(1, self.lists[2])
         self.GcomboBox.insertItems(1, self.gender)
@@ -234,18 +215,15 @@ class Functions(Ui_Dialog):
 
         self.studentTable.doubleClicked.connect(
             lambda index, table="students": self.trigger_popup(index, table))
-        self.studentTable.selectionModel().currentChanged.connect(
-            self.on_student_selection_changed)
+        # self.studentTable.selectionModel().currentChanged.connect(self.on_student_selection_changed)
         self.courseTable.doubleClicked.connect(
             lambda index, table="courses": self.trigger_popup(index, table))
-        self.courseTable.selectionModel().currentChanged.connect(
-            self.on_course_selection_changed)
-        self.tabWidget.currentChanged.connect(self.handle_tab_changed)
+        # self.courseTable.selectionModel().currentChanged.connect(self.on_course_selection_changed)
 
         self.editEntryButton.clicked.connect(
             lambda table: self.updateModels("students"))
         self.editCourseButton.clicked.connect(
-            lambda table="courses": self.updateModels(table))
+            lambda table: self.updateModels("courses"))
 
     def modelSetter(self):
         self.studentModel.blockSignals(True)
@@ -265,12 +243,12 @@ class Functions(Ui_Dialog):
 
     def addClicked(self):
         try:
-            if any(id == "" or id.isspace() for id in [self.lineEdit_id.text(), self.lineEdit_id_2.text()]):
-                raise CustomException("Error: Please fill out ID fields")
-            arrey = [f"{self.lineEdit_id.text()}-{self.lineEdit_id_2.text()}", self.lineEdit_name.text(), self.GcomboBox.currentText(
+            if any(id == "" or id.isspace() for id in [self.lineEdit_id.text(), self.lineEdit_id_2.text(), self.lineEdit_name.text()]):
+                raise CustomException("Error: Please fill out all the fields")
+            arrey = [f"{self.lineEdit_id.text().strip()}-{self.lineEdit_id_2.text()}", self.lineEdit_name.text(), self.GcomboBox.currentText(
             ), self.YcomboBox.currentText(), self.comboBox.currentText()]
-            if any(element == "" for element in arrey) or any(item.isspace() for item in arrey):
-                raise CustomException("Please fill all the fields")
+            # if any(element == "" or element.isspace() for element in arrey):
+            #    raise CustomException("Error: Please fill out all the fields")
             print(arrey)
             print(self.lists[2])
             db.add_row(arrey)
@@ -279,15 +257,9 @@ class Functions(Ui_Dialog):
             self.studentModel.blockSignals(True)
 
             for column in range(self.studentModel.columnCount()):
-                self.prevText = arrey[column]
                 item = QtGui.QStandardItem(arrey[column])
                 item.setEditable(False)
                 self.studentModel.setItem(num_rows, column, item)
-                '''
-                if column in [2, 3, 4]:
-                    self.studentModel.itemFromIndex(
-                        self.studentModel.index(num_rows, column)).setEditable(False)
-                        '''
 
             self.studentModel.blockSignals(False)
         except Exception as e:
@@ -295,22 +267,21 @@ class Functions(Ui_Dialog):
             var.exec()
 
     def search_table(self):
-        if self.pushButton_3.text() is not None:
-            search_string = self.lineEdit_name_3.text()
-            # self.studentsCSV = pd.read_csv(studentsFile)
-            for row in range(self.studentModel.rowCount()):
-                match_found = False
-                for column in [0, 1]:
-                    print(
-                        f"KOBEEE {self.studentModel.index(row, column).data(0)}")
-                    temp = self.studentModel.index(row, column).data(0)
-                    if temp is not None and search_string.lower() in temp.strip().lower():
-                        match_found = True
-                        break
-                if match_found:
-                    self.studentTable.setRowHidden(row, False)
-                else:
-                    self.studentTable.setRowHidden(row, True)
+        search_string = self.lineEdit_name_3.text()
+        # self.studentsCSV = pd.read_csv(studentsFile)
+        for row in range(self.studentModel.rowCount()):
+            match_found = False
+            for column in [0, 1]:
+                print(
+                    f"KOBEEE {self.studentModel.index(row, column).data(0)}")
+                temp = self.studentModel.index(row, column).data(0)
+                if temp is not None and search_string.lower() in temp.strip().lower():
+                    match_found = True
+                    break
+            if match_found:
+                self.studentTable.setRowHidden(row, False)
+            else:
+                self.studentTable.setRowHidden(row, True)
 
     def delete_rows(self, arr, header):
         currentModel = self.studentModel if header == "student id" else self.courseModel
@@ -355,23 +326,26 @@ class Functions(Ui_Dialog):
             else:
                 print("else:")
                 db.delete_course(primary_key)
-                self.delete_rows(rows_to_remove, "course code")
+                # self.delete_rows(rows_to_remove, "course code")
                 rows_to_remove = self.student_id_in_course(primary_key)
                 self.lists[2] = db.list_of_courses()
+                self.updateModels("courses")
 
                 self.comboBox.clear()
                 self.comboBox.addItems(self.lists[2])
-            self.delete_rows(rows_to_remove, "student id")
+            self.updateModels("students")
+            # self.delete_rows(rows_to_remove, "student id")
 
-    # not needed
     def updateModels(self, table):
         if table == "students":
             table_db = db.table_for_students()
+            self.studentModel = self.table_to_QSIM(table_db)
             model = self.studentModel
             header = self.headers
             tableview = self.studentTable
         else:
             table_db = db.table_for_courses()
+            self.courseModel = self.table_to_QSIM(table_db)
             model = self.courseModel
             header = self.headers2
             tableview = self.courseTable
@@ -381,39 +355,26 @@ class Functions(Ui_Dialog):
 
         model.blockSignals(True)
 
-        # model = self.table_to_QSIM(table_db)
-        self.table_to_QSIM2(model, table_db)
         # header = db.headers_of_table(table)
         model.setHorizontalHeaderLabels(header)
         tableview.setModel(model)
 
         model.blockSignals(False)
         warning = CustomWarningBox(
-            Dialog, "Refresh is successful")
+            Dialog, f"{table}: Refresh is successful")
         warning.exec()
 
     def addCourseClicked(self):
-
-        condition1 = (not (self.addCourseLine_2.text() in self.lists[2]))
+        # condition1 = (not (self.addCourseLine_2.text() in self.lists[2]))
         condition2 = (
             all((line.text() != "" and not line.text().isspace()) for line in (self.addCourseLine, self.addCourseLine_2)))
-
-        #    if (new_text != ""):
-        #        if not new_text.isspace() and db.duplicate_checker(column, new_text, table) is None:
 
         print(f"addCourseClicked condition: {condition2}")
         if condition2:
             try:
-                '''
-                if db.duplicate_checker("course code", self.addCourseLine_2.text(), "courses"):
-                    raise CustomException("Course Code is duplicate")
-                elif db.duplicate_checker("course", self.addCourseLine.text(), "courses"):
-                    raise CustomException("Course is duplicate")
-                    '''
-                arrey = [self.addCourseLine_2.text(),
+                arrey = [self.addCourseLine_2.text().strip(),
                          self.addCourseLine.text()]
                 db.add_course(arrey)
-                # self.courseModel.sort(1, Qt.SortOrder.AscendingOrder)
 
                 num_rows = self.courseModel.rowCount()
                 self.courseModel.insertRow(num_rows)
@@ -421,27 +382,18 @@ class Functions(Ui_Dialog):
                 self.courseModel.blockSignals(True)
 
                 for column in range(self.courseModel.columnCount()):
-                    self.prevText = arrey[column]
                     item = QtGui.QStandardItem(arrey[column])
                     self.courseModel.setItem(num_rows, column, item)
 
                 self.courseModel.blockSignals(False)
-                self.lists[2].append(self.addCourseLine_2.text())
+                self.lists[2].append(arrey[0])
                 # self.lists[2] = db.list_of_courses()
                 # self.comboBox.clear()
-                self.comboBox.addItem(self.addCourseLine_2.text())
+                self.comboBox.addItem(arrey[0])
             except Exception as e:
                 var = CustomWarningBox(Dialog, str(e))
                 var.exec()
                 # print(str(e))
-
-    def on_student_selection_changed(self, current_index, previous_index):
-        print("student")
-        column = current_index.column()
-        row = current_index.row()
-        self.prevText = self.studentModel.data(current_index)
-        print(
-            f"Selected cell({column}, {row}): '{self.prevText}'")
 
     def trigger_popup(self, index, table):
         print(f"table == {table}")
@@ -478,28 +430,12 @@ class Functions(Ui_Dialog):
                     model.blockSignals(False)
                     if header == "course code" and table == "courses":
                         self.lists[2] = db.list_of_courses()
-                        self.editCourseNameinSTable(current_text, newInfo)
+                        self.updateModels("students")
+                        # self.editCourseNameinSTable(current_text, newInfo)
         except Exception as e:
             print(str(e))
             var = CustomWarningBox(Dialog, str(e))
             var.exec()
-
-    def on_course_selection_changed(self, current_index, previous_index):
-        print("course")
-        column = current_index.column()
-        row = current_index.row()
-        self.prevText = self.courseModel.data(current_index)
-        print(f"Selected cell({column}, {row}): '{self.prevText}'")
-
-    def handle_tab_changed(self, index):
-        # False == student, True == course
-        index = not index
-        previous_tableview = self.tabWidget.widget(index).children()[0]
-
-        previous_tableview.selectionModel().clearSelection()
-        previous_tableview.clearFocus()
-        self.prevText = ""
-        print(f"prevText = {self.prevText}")
 
     def editCourseNameinSTable(self, oldInfo, newInfo):
         print("\nupdateCourses called !!!")
