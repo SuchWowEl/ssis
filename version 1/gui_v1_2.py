@@ -45,12 +45,6 @@ class UI_Dialog(object):
         self.studentTable.setStyleSheet("color: rgb(245, 241, 224);\n"
                                         "border: 2px solid rgb(130, 132, 137);")
         self.studentTable.setObjectName("studentTable")
-        self.editEntryButton = QtWidgets.QPushButton(parent=self.studentTab)
-        self.editEntryButton.setGeometry(QtCore.QRect(620, 190, 81, 31))
-        self.editEntryButton.setStyleSheet("border-radius: 5px;\n"
-                                           "color: rgb(241, 234, 208);\n"
-                                           "border :2px solid rgb(216, 17, 89);")
-        self.editEntryButton.setObjectName("editEntryButton")
         self.deleteStudentButton = QtWidgets.QPushButton(
             parent=self.studentTab)
         self.deleteStudentButton.setGeometry(QtCore.QRect(720, 190, 101, 31))
@@ -121,7 +115,7 @@ class UI_Dialog(object):
                                       "border:2px solid rgb(71, 115, 154);/*2px solid rgb(33, 241, 54);*/")
         self.pushButton.setObjectName("pushButton")
         self.lineEdit_id = QtWidgets.QLineEdit(parent=self.groupBox_4)
-        self.lineEdit_id.setGeometry(QtCore.QRect(90, 70, 321, 31))
+        self.lineEdit_id.setGeometry(QtCore.QRect(90, 70, 141, 31))
         self.lineEdit_id.setStyleSheet("border-style: none;\n"
                                        "border-bottom-style: solid;\n"
                                        "border-width: 0 0 2px 0;\n"
@@ -130,6 +124,7 @@ class UI_Dialog(object):
                                        "background-color: transparent;")
         self.lineEdit_id.setInputMask("")
         self.lineEdit_id.setText("")
+        self.lineEdit_id.setMaxLength(4)
         self.lineEdit_id.setObjectName("lineEdit_id")
         self.comboBox = QtWidgets.QComboBox(parent=self.groupBox_4)
         self.comboBox.setGeometry(QtCore.QRect(610, 20, 161, 31))
@@ -151,6 +146,26 @@ class UI_Dialog(object):
         self.label_3.setFont(font)
         self.label_3.setStyleSheet("color: rgb(245, 241, 224);")
         self.label_3.setObjectName("label_3")
+        self.lineEdit_id_2 = QtWidgets.QLineEdit(parent=self.groupBox_4)
+        self.lineEdit_id_2.setGeometry(QtCore.QRect(260, 70, 151, 31))
+        self.lineEdit_id_2.setStyleSheet("border-style: none;\n"
+                                         "border-bottom-style: solid;\n"
+                                         "border-width: 0 0 2px 0;\n"
+                                         "border-color: rgb(71, 115, 154);\n"
+                                         "color: white;\n"
+                                         "background-color: transparent;")
+        self.lineEdit_id_2.setInputMask("")
+        self.lineEdit_id_2.setText("")
+        self.lineEdit_id_2.setMaxLength(4)
+        self.lineEdit_id_2.setObjectName("lineEdit_id_2")
+        self.label_5 = QtWidgets.QLabel(parent=self.groupBox_4)
+        self.label_5.setGeometry(QtCore.QRect(235, 70, 21, 31))
+        self.label_5.setText("  -")
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.label_5.setFont(font)
+        self.label_5.setStyleSheet("color: rgb(245, 241, 224);")
+        self.label_5.setObjectName("label_5")
         self.tabWidget.addTab(self.studentTab, "")
         self.courseTab = QtWidgets.QWidget()
         self.courseTab.setObjectName("courseTab")
@@ -190,12 +205,6 @@ class UI_Dialog(object):
         self.label.setFont(font)
         self.label.setStyleSheet("color: rgb(245, 241, 224);")
         self.label.setObjectName("label")
-        self.editCourseButton = QtWidgets.QPushButton(parent=self.courseTab)
-        self.editCourseButton.setGeometry(QtCore.QRect(620, 80, 81, 31))
-        self.editCourseButton.setStyleSheet("border-radius: 5px ;\n"
-                                            "color: rgb(241, 234, 208);\n"
-                                            "border :2px solid rgb(216, 17, 89);")
-        self.editCourseButton.setObjectName("editCourseButton")
         self.deleteCourseButton = QtWidgets.QPushButton(parent=self.courseTab)
         self.deleteCourseButton.setGeometry(QtCore.QRect(720, 80, 101, 31))
         self.deleteCourseButton.setStyleSheet("border-radius: 5px ;\n"
@@ -211,7 +220,6 @@ class UI_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.editEntryButton.setText(_translate("Dialog", "EDIT: OFF"))
         self.deleteStudentButton.setText(_translate("Dialog", "DELETE ENTRY"))
         self.label_9.setText(_translate(
             "Dialog", "Simple Student Information System (SSIS)"))
@@ -228,6 +236,9 @@ class UI_Dialog(object):
             _translate("Dialog", "Enter ID of student"))
         self.label_4.setText(_translate("Dialog", "       ID"))
         self.label_3.setText(_translate("Dialog", "      Course"))
+        self.lineEdit_id_2.setPlaceholderText(
+            _translate("Dialog", "Enter ID of student"))
+        self.label_5.setText(_translate("Dialog", "-"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(
             self.studentTab), _translate("Dialog", "Student"))
         self.addCourseLine.setPlaceholderText(
@@ -236,19 +247,6 @@ class UI_Dialog(object):
         self.addCourseButton.setText(_translate("Dialog", "ADD"))
         self.label.setText(_translate(
             "Dialog", "Simple Student Information System (SSIS)"))
-        self.editCourseButton.setText(_translate("Dialog", "EDIT: OFF"))
         self.deleteCourseButton.setText(_translate("Dialog", "DELETE ENTRY"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(
             self.courseTab), _translate("Dialog", "Course"))
-
-
-'''
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
-    ui = Ui_Dialog()
-    ui.setupUi(Dialog)
-    Dialog.show()
-    sys.exit(app.exec())
-'''
