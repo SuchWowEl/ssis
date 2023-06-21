@@ -212,69 +212,6 @@ class pandasway_object(object):
 
 
 pd_obj = pandasway_object()
-
-
-def studentInCSV(newEntry):
-    return pd_obj.studentInCSV(newEntry)
-
-
-def courseInCSV2(courses, newCourse):
-    return pd_obj.courseInCSV2(courses, newCourse)
-
-
-def courseInCSV(newCourse):
-    return pd_obj.courseInCSV(newCourse)
-
-
-def addEntry(row):
-    pd_obj.addEntry(row)
-
-
-def addCourse(courseName):
-    return pd_obj.addCourse(courseName)
-
-
-def deleteEntry(index):
-    pd_obj.deleteEntry(index)
-
-
-def deleteCourse(index):
-    return pd_obj.deleteCourse(index)
-
-
-def notInCSV(newInfo, column, boolTableMode):
-    return pd_obj.notInCSV(newInfo, column, boolTableMode)
-
-
-def editEntry(oldInfo, newInfo, column):
-    pd_obj.editEntry(oldInfo, newInfo, column)
-
-
-def editEntry(idNumber, newInfo, column):
-    pd_obj.editEntry2(idNumber, newInfo, column)
-
-
-def editEntryCourse(idNumber, newCourse):
-    pd_obj.editEntryCourse(idNumber, newCourse)
-
-
-def editCourse(oldCourse, newCourse):
-    pd_obj.editCourse(oldCourse, newCourse)
-
-
-def initStudent():
-    pd_obj.initStudent()
-
-
-def initCourse():
-    pd_obj.initCourse()
-
-
-def initTables():
-    initStudent()
-    initCourse()
-
-
 # if __name__ == '__main__':
 '''
     courseCSV = pd.read_csv(courseFile)
