@@ -300,7 +300,7 @@ class Functions(Ui_Dialog):
             # self.studentsCSV = pd.read_csv(studentsFile)
             for row in range(self.studentModel.rowCount()):
                 match_found = False
-                for column in range(self.studentModel.columnCount()):
+                for column in [0, 1]:
                     print(
                         f"KOBEEE {self.studentModel.index(row, column).data(0)}")
                     temp = self.studentModel.index(row, column).data(0)
@@ -393,9 +393,10 @@ class Functions(Ui_Dialog):
         warning.exec()
 
     def addCourseClicked(self):
-        condition1 = (not (self.addCourseCodeLine.text() in self.lists[2]))
+
+        condition1 = (not (self.addCourseLine_2.text() in self.lists[2]))
         condition2 = (
-            all((line.text() != "" and not line.text().isspace()) for line in (self.addCourseLine, self.addCourseCodeLine)))
+            all((line.text() != "" and not line.text().isspace()) for line in (self.addCourseLine, self.addCourseLine_2)))
 
         #    if (new_text != ""):
         #        if not new_text.isspace() and db.duplicate_checker(column, new_text, table) is None:
@@ -404,12 +405,12 @@ class Functions(Ui_Dialog):
         if condition2:
             try:
                 '''
-                if db.duplicate_checker("course code", self.addCourseCodeLine.text(), "courses"):
+                if db.duplicate_checker("course code", self.addCourseLine_2.text(), "courses"):
                     raise CustomException("Course Code is duplicate")
                 elif db.duplicate_checker("course", self.addCourseLine.text(), "courses"):
                     raise CustomException("Course is duplicate")
                     '''
-                arrey = [self.addCourseCodeLine.text(),
+                arrey = [self.addCourseLine_2.text(),
                          self.addCourseLine.text()]
                 db.add_course(arrey)
                 # self.courseModel.sort(1, Qt.SortOrder.AscendingOrder)
@@ -425,10 +426,10 @@ class Functions(Ui_Dialog):
                     self.courseModel.setItem(num_rows, column, item)
 
                 self.courseModel.blockSignals(False)
-                self.lists[2].append(self.addCourseCodeLine.text())
+                self.lists[2].append(self.addCourseLine_2.text())
                 # self.lists[2] = db.list_of_courses()
                 # self.comboBox.clear()
-                self.comboBox.addItem(self.addCourseCodeLine.text())
+                self.comboBox.addItem(self.addCourseLine_2.text())
             except Exception as e:
                 var = CustomWarningBox(Dialog, str(e))
                 var.exec()
