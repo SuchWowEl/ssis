@@ -49,7 +49,7 @@ def add_row(val):
     '''
     # try:
     sql = "INSERT INTO students (`student id`, name, gender, `year level`, `course code`) VALUES (%s, %s, %s, %s, %s)"
-    val = (val[0], val[1], val[2], val[3], val[4])
+    # val = (val[0], val[1], val[2], val[3], val[4])
     mycursor.execute(sql, val)
     # Commit the transaction
     mydb.commit()
@@ -81,7 +81,7 @@ def add_course(val):  # val is an array
     #    print("cannot add")
     # else:
     sql = "INSERT INTO courses (`course code`, course) VALUES (%s, %s)"
-    val = (val[0], val[1])
+    # val = (val[0], val[1])
     mycursor.execute(sql, val)
     # Commit the transaction
     mydb.commit()
@@ -163,8 +163,8 @@ def close_connection():
 
 
 if __name__ == '__main__':
-    edit_student("2021-0003", "2021-0000", "student id")
     '''
+    edit_student("2021-0003", "2021-0000", "student id")
     lest = headers_of_table("students")
     print(lest)
     arr = ["2021-0000", "zero", "Male", "4th Year", "BSCS"]
