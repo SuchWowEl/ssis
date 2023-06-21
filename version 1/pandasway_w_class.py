@@ -177,6 +177,14 @@ class pandasway_object(object):
         self.studentsCSV.to_csv(studentsFile, mode='w', index=False)
         print("csv modified by pandas")
 
+    def editEntry2(self, idNumber, newInfo, column):
+        self.studentsCSV["id"] = self.studentsCSV["id"].astype(str)
+        self.studentsCSV.loc[self.studentsCSV[self.studentsCSV['id'] ==
+                                              str(idNumber)].index, column] = str(newInfo)
+        print(self.studentsCSV)
+        self.studentsCSV.to_csv(studentsFile, mode='w', index=False)
+        print("csv modified by pandas")
+
     def editEntryCourse(self, idNumber, newCourse):
         self.studentsCSV["id"] = self.studentsCSV["id"].astype(str)
         self.studentsCSV.loc[self.studentsCSV[self.studentsCSV['id'] ==
@@ -240,6 +248,10 @@ def notInCSV(newInfo, column, boolTableMode):
 
 def editEntry(oldInfo, newInfo, column):
     pd_obj.editEntry(oldInfo, newInfo, column)
+
+
+def editEntry(idNumber, newInfo, column):
+    pd_obj.editEntry2(idNumber, newInfo, column)
 
 
 def editEntryCourse(idNumber, newCourse):
