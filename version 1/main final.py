@@ -238,6 +238,7 @@ class Functional(UI_Dialog):
         try:
             if dialog.exec() == 1:
                 newInfo = dialog.get_selected_item()
+                print(newInfo)
                 if newInfo != "" and not newInfo.isspace():
                     print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
@@ -266,7 +267,7 @@ class Functional(UI_Dialog):
                         if header == "name" or (header == "id" and not inStudent):
                             # pd_obj.editEntry(previous_text,newInfo, header)
                             idNum = self.studentModel.index(row, 1).data(0)
-                            pd_obj.editEntry(idNum, newInfo, header)
+                            pd_obj.editEntry2(idNum, newInfo, header)
                         elif header == "id" and inStudent:
                             raise CustomException(
                                 f"Error: \"{newInfo}\" is duplicate")
