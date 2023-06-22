@@ -84,8 +84,10 @@ class EditPopUp(QtWidgets.QDialog):
         super().__init__(parent)
         if header == "id":
             self.student_id_window(current_string, header)
-        else:
+        elif header != "warning":
             self.edit_window(current_string, header)
+        else:
+            self.confirm()
 
     def edit_window(self, current_string, header):
         # current_string = current_string.split()
@@ -160,6 +162,23 @@ class EditPopUp(QtWidgets.QDialog):
     def get_selected_item(self):
         return self.new_input
         # return self.combobox.currentText()
+
+    def confirm(self):
+        self.setWindowTitle("Change ID number")
+        self.setFixedWidth(200)
+        self.setFixedHeight(100)
+
+        layout = QtWidgets.QVBoxLayout()
+
+        self.label = QtWidgets.QLabel("Warning: Are you sure to delete?")
+
+        ok_button = QtWidgets.QPushButton("OK")
+
+        layout.addWidget(self.label)
+        # layout.addWidget(self.combobox)
+        layout.addWidget(ok_button)
+        ok_button.clicked.connect(self.accept)
+        self.setLayout(layout)
 
 
 class CoursePopUp(QtWidgets.QDialog):
@@ -338,34 +357,36 @@ class Functional(UI_Dialog):
             currentModel.removeRow(row)
 
     def delete_entry(self, header):
-        print("delete_entry IS CALLED and header is")
-        print(header)
-        selection_model = self.studentTable.selectionModel(
-        ) if header != "course" else self.courseTable.selectionModel()
+        dialog = EditPopUp(Dialog, "a", "warning")
+        if dialog.exec() == 1:
+            print("delete_entry IS CALLED and header is")
+            print(header)
+            selection_model = self.studentTable.selectionModel(
+            ) if header != "course" else self.courseTable.selectionModel()
 
-        selected_indexes = selection_model.selectedIndexes()
+            selected_indexes = selection_model.selectedIndexes()
 
-        rows_to_remove = []
-        for index in selected_indexes:
-            rows_to_remove.append(index.row())
-        rows_to_remove.sort(reverse=True)
-        if header != "course":
-            print("if header != 'course':")
-            pd_obj.deleteEntry(rows_to_remove)
-        else:
-            print("else:")
-            self.delete_rows(rows_to_remove, "course")
-            for index in rows_to_remove:
-                print(
-                    f"index in rows is {index}")
-                self.courseList.pop(index)
-            # get rows_to_remove for studentTable
-            rows_to_remove = sorted(
-                pd_obj.deleteCourse(rows_to_remove), reverse=True)
-            self.comboBox.clear()
-            self.comboBox.addItems(self.courseList)
-        self.delete_rows(rows_to_remove, "not course")
-        print(self.courseList)
+            rows_to_remove = []
+            for index in selected_indexes:
+                rows_to_remove.append(index.row())
+            rows_to_remove.sort(reverse=True)
+            if header != "course":
+                print("if header != 'course':")
+                pd_obj.deleteEntry(rows_to_remove)
+            else:
+                print("else:")
+                self.delete_rows(rows_to_remove, "course")
+                for index in rows_to_remove:
+                    print(
+                        f"index in rows is {index}")
+                    self.courseList.pop(index)
+                # get rows_to_remove for studentTable
+                rows_to_remove = sorted(
+                    pd_obj.deleteCourse(rows_to_remove), reverse=True)
+                self.comboBox.clear()
+                self.comboBox.addItems(self.courseList)
+            self.delete_rows(rows_to_remove, "not course")
+            print(self.courseList)
 
     def modelSetter(self):
         self.headers = list(self.studentsCSV.columns)

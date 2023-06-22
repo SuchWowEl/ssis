@@ -49,8 +49,27 @@ class EditPopUp(QtWidgets.QDialog):
         super().__init__(parent)
         if header == "student id":
             self.student_id_window(current_string, header)
-        else:
+        elif header != "warning":
             self.edit_window(current_string, header)
+        else:
+            self.confirm()
+
+    def confirm(self):
+        self.setWindowTitle("Change ID number")
+        self.setFixedWidth(200)
+        self.setFixedHeight(100)
+
+        layout = QtWidgets.QVBoxLayout()
+
+        self.label = QtWidgets.QLabel("Warning: Are you sure to delete?")
+
+        ok_button = QtWidgets.QPushButton("OK")
+
+        layout.addWidget(self.label)
+        # layout.addWidget(self.combobox)
+        layout.addWidget(ok_button)
+        ok_button.clicked.connect(self.accept)
+        self.setLayout(layout)
 
     def edit_window(self, current_string, header):
         # current_string = current_string.split()
@@ -245,10 +264,11 @@ class Functions(Ui_Dialog):
         try:
             if any(id == "" or id.isspace() for id in [self.lineEdit_id.text(), self.lineEdit_id_2.text(), self.lineEdit_name.text()]):
                 raise CustomException("Error: Please fill out all the fields")
-            arrey = [f"{self.lineEdit_id.text().strip()}-{self.lineEdit_id_2.text()}", self.lineEdit_name.text(), self.GcomboBox.currentText(
+            arrey = [f"{self.lineEdit_id.text().strip()}-{self.lineEdit_id_2.text()}", self.lineEdit_name.text().strip(), self.GcomboBox.currentText(
             ), self.YcomboBox.currentText(), self.comboBox.currentText()]
-            # if any(element == "" or element.isspace() for element in arrey):
-            #    raise CustomException("Error: Please fill out all the fields")
+            if any(len(id) != 9 for id in arrey[:1]):
+                raise CustomException(
+                    "Error: Please fill out ID field properly")
             print(arrey)
             print(self.lists[2])
             db.add_row(arrey)
@@ -299,42 +319,44 @@ class Functions(Ui_Dialog):
         return rows_to_remove
 
     def delete_entry(self, table):
-        print("delete_entry IS CALLED and table is")
-        print(table)
-        selection_model = self.studentTable.selectionModel(
-        ) if table == "student id" else self.courseTable.selectionModel()
-        model = self.studentModel if table == "student id" else self.courseModel
-        selected_indexes = selection_model.selectedIndexes()
-        print(selected_indexes)
-        if len(selected_indexes) != 0:
-            rows_to_remove = []
-            primary_key = []
-            temp = -1
-            for indx in selected_indexes:
-                if temp != indx.row():
-                    rows_to_remove.append(indx.row())
-                    primary_key.append(model.index(indx.row(), 0).data(0))
-                    # to remove duplicate row indexes
-                    temp = indx.row()
-            print(f"rows_to_remove = {rows_to_remove}")
-            rows_to_remove.sort(reverse=True)
+        dialog = EditPopUp(Dialog, "a", "warning")
+        if dialog.exec() == 1:
+            print("delete_entry IS CALLED and table is")
+            print(table)
+            selection_model = self.studentTable.selectionModel(
+            ) if table == "student id" else self.courseTable.selectionModel()
+            model = self.studentModel if table == "student id" else self.courseModel
+            selected_indexes = selection_model.selectedIndexes()
+            print(selected_indexes)
+            if len(selected_indexes) != 0:
+                rows_to_remove = []
+                primary_key = []
+                temp = -1
+                for indx in selected_indexes:
+                    if temp != indx.row():
+                        rows_to_remove.append(indx.row())
+                        primary_key.append(model.index(indx.row(), 0).data(0))
+                        # to remove duplicate row indexes
+                        temp = indx.row()
+                print(f"rows_to_remove = {rows_to_remove}")
+                rows_to_remove.sort(reverse=True)
 
-            if table == "student id":
-                print("removing student entry/ies:")
-                # self.pd_obj.deleteEntry(rows_to_remove)
-                db.delete_rows(primary_key)
-            else:
-                print("else:")
-                db.delete_course(primary_key)
-                # self.delete_rows(rows_to_remove, "course code")
-                rows_to_remove = self.student_id_in_course(primary_key)
-                self.lists[2] = db.list_of_courses()
-                self.updateModels("courses")
+                if table == "student id":
+                    print("removing student entry/ies:")
+                    # self.pd_obj.deleteEntry(rows_to_remove)
+                    db.delete_rows(primary_key)
+                else:
+                    print("else:")
+                    db.delete_course(primary_key)
+                    # self.delete_rows(rows_to_remove, "course code")
+                    rows_to_remove = self.student_id_in_course(primary_key)
+                    self.lists[2] = db.list_of_courses()
+                    self.updateModels("courses")
 
-                self.comboBox.clear()
-                self.comboBox.addItems(self.lists[2])
-            self.updateModels("students")
-            # self.delete_rows(rows_to_remove, "student id")
+                    self.comboBox.clear()
+                    self.comboBox.addItems(self.lists[2])
+                self.updateModels("students")
+                # self.delete_rows(rows_to_remove, "student id")
 
     def updateModels(self, table):
         if table == "students":
