@@ -599,6 +599,9 @@ class Functions(Ui_Dialog):
         self.comboBox.clear()
         self.comboBox.addItems(self.lists[2])
 
+    def cleanup_function(self):
+        db.close_connection()
+
 
 if __name__ == "__main__":
     import sys
@@ -608,4 +611,5 @@ if __name__ == "__main__":
     function_OBJ = Functions(Dialog)
     # ui.setupUi(Dialog)
     Dialog.show()
+    app.aboutToQuit.connect(function_OBJ.cleanup_function)
     sys.exit(app.exec())
