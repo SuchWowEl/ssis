@@ -159,7 +159,25 @@ def list_of_courses():
 def close_connection():
     mydb.close()
 
-# def update_row(old, new):
+
+def search_records(search_values, boolean):
+    query = "SELECT * FROM test_db.students WHERE "
+    conditions = []
+    parameters = []
+    column_names = ["student id", "name",
+                    "gender", "year level", "course code"]
+
+    # SELECT * FROM test_db.students WHERE `name` REGEXP 'an' OR `student id` REGEXP '3|6'
+    for index, value in enumerate(search_values):
+        if value:
+            query = query + " " + \
+                f"`{column_names[index]}` REGEXP '{search_values[index]}' {boolean}"
+    query = query.rstrip(f" {boolean}")
+    print(query)
+    mycursor.execute(query)
+
+    rows = mycursor.fetchall()
+    return rows
 
 
 if __name__ == '__main__':

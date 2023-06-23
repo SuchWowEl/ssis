@@ -8,7 +8,7 @@ import csv
 import re
 import mysqltest as db
 # from gui_V2 import Ui_Dialog
-from gui_V2 import Ui_Dialog
+from gui_V2_copy import Ui_Dialog
 import pandas as pd
 
 # python -m PyQt6.uic.pyuic -o gui_V2_copy.py -x untitled2.ui
@@ -55,7 +55,7 @@ class EditPopUp(QtWidgets.QDialog):
             self.confirm()
 
     def confirm(self):
-        self.setWindowTitle("Change ID number")
+        self.setWindowTitle("🤨")
         self.setFixedWidth(200)
         self.setFixedHeight(100)
 
@@ -79,7 +79,7 @@ class EditPopUp(QtWidgets.QDialog):
         self.setFixedHeight(100)
 
         layout = QtWidgets.QHBoxLayout()
-        print(f"IT IS {current_string}")
+        # print(f"IT IS {current_string}")
         self.line = QtWidgets.QLineEdit(current_string)
         self.line.setMaxLength(255)
         self.line.setStyleSheet(self.lineedit_style)
@@ -147,8 +147,127 @@ class EditPopUp(QtWidgets.QDialog):
 
 
 class ChooserPopUp(QtWidgets.QDialog):
+    lineedit_style = """
+                    QLineEdit {
+                        border-style: none;
+                        border-bottom-style: solid;
+                        border-width: 0 0 2px 0;
+                        border-color: rgb(71, 115, 154);
+                        color: white;
+                        background-color: transparent;
+                    }
+                    """
+    radioButton_style = """
+                    QRadioButton {
+                        background-color:       rgb(39, 41, 50);
+                        color:                  white;
+                    }
+
+                    QRadioButton::indicator {
+                        width:                  10px;
+                        height:                 10px;
+                        border-radius:          7px;
+                    }
+
+                    QRadioButton::indicator:checked {
+                        background-color:       rgb(216, 17, 89);
+                        border:                 2px solid rgb(241, 234, 208);
+                    }
+
+                    QRadioButton::indicator:unchecked {
+                        background-color:       rgb(39, 41, 50);
+                        border:                 2px solid rgb(241, 234, 208);
+                    }
+                        """
+
     def __init__(self, parent, given_list, combo_string, header):
         super().__init__(parent)
+        if header != "search":
+            self.comboboxer(parent, given_list, combo_string, header)
+        else:
+            self.searcher(parent, given_list)
+
+    def searcher(self, parent, given_list):
+        self.setWindowTitle(f"Search 🔍🔍🔍")
+        self.setFixedWidth(400)
+        self.setFixedHeight(200)
+
+        layout = QtWidgets.QVBoxLayout()
+
+        self.id = QtWidgets.QLineEdit()
+        self.id.setPlaceholderText("Enter id...")
+        self.id.setMaxLength(9)
+        self.id.setStyleSheet(self.lineedit_style)
+        self.id.setFixedWidth(200)
+
+        self.name = QtWidgets.QLineEdit()
+        self.name.setPlaceholderText("Enter name...")
+        self.name.setMaxLength(255)
+        self.name.setStyleSheet(self.lineedit_style)
+
+        # self.lists = [self.gender, self.year, db.list_of_courses()]
+        self.gender = QtWidgets.QComboBox()
+        self.gender.addItems(["not include gender"])
+        self.gender.addItems(given_list[0])
+        self.gender.setFixedWidth(200)
+
+        self.year = QtWidgets.QComboBox()
+        self.year.addItems(["not include year"])
+        self.year.addItems(given_list[1])
+        self.year.setFixedWidth(200)
+
+        self.courses = QtWidgets.QComboBox()
+        self.courses.addItems(["not include course"])
+        self.courses.addItems(given_list[2])
+        self.courses.setFixedWidth(200)
+
+        radio_layout = QtWidgets.QHBoxLayout()
+        self.button_group = QtWidgets.QButtonGroup()
+        self.or_button = QtWidgets.QRadioButton("OR")
+        self.and_button = QtWidgets.QRadioButton("AND")
+        self.or_button.setStyleSheet(self.radioButton_style)
+        self.and_button.setStyleSheet(self.radioButton_style)
+        self.button_group.addButton(self.or_button)
+        self.button_group.addButton(self.and_button)
+        self.or_button.setChecked(True)
+        radio_layout.addStretch(1)
+        radio_layout.addWidget(self.or_button)
+        radio_layout.addWidget(self.and_button)
+        radio_layout.addStretch(1)
+
+        layout.addStretch(1)
+        layout.addWidget(self.id, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.name)
+        layout.addWidget(self.gender, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.year, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.courses, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addStretch(1)
+        layout.addLayout(radio_layout)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # layout.addWidget(self.combobox)
+
+        ok_button = QtWidgets.QPushButton("OK")
+        layout.addWidget(ok_button)
+        ok_button.clicked.connect(self.array_setter)
+        self.setLayout(layout)
+
+    def array_setter(self):
+        arr = [self.id.text().strip(), self.name.text().strip(), self.gender.currentText(
+        ).strip(), self.year.currentText().strip(), self.courses.currentText().strip()]
+
+        arr.append(self.or_button.text() if self.or_button.isChecked()
+                   else self.and_button.text())
+
+        for i in [2, 3, 4]:
+            if "not include" in arr[i]:
+                arr[i] = ""
+        self.array = arr
+        self.accept()
+
+    def array_returner(self):
+        return self.array
+
+    def comboboxer(self, parent, given_list, combo_string, header):
         self.setWindowTitle(f"Choose new {header}")
         self.setFixedWidth(200)
         self.setFixedHeight(100)
@@ -287,22 +406,24 @@ class Functions(Ui_Dialog):
             var.exec()
 
     def search_table(self):
-        search_string = self.lineEdit_name_3.text()
-        # self.studentsCSV = pd.read_csv(studentsFile)
-        for row in range(self.studentModel.rowCount()):
-            match_found = False
-            for column in [0, 1]:
-                print(
-                    f"KOBEEE {self.studentModel.index(row, column).data(0)}")
-                temp = self.studentModel.index(row, column).data(0)
-                if temp is not None and search_string.lower() in temp.strip().lower():
-                    match_found = True
-                    break
-            if match_found:
-                self.studentTable.setRowHidden(row, False)
-            else:
-                self.studentTable.setRowHidden(row, True)
+        search_dialog = ChooserPopUp(
+            Dialog, self.lists, "none", "search")
+        if search_dialog.exec() == 1:
+            arr = search_dialog.array_returner()
+            if any(item != "" for item in arr[0:5]):
+                table_db = db.search_records(arr[0:5], arr[5])
+                self.studentModel = self.table_to_QSIM(table_db)
 
+                self.studentModel.blockSignals(True)
+                self.studentModel.setHorizontalHeaderLabels(self.headers)
+                self.studentTable.setModel(self.studentModel)
+
+                self.studentModel.blockSignals(False)
+                warning = CustomWarningBox(
+                    Dialog, f"students: Refresh is successful")
+                warning.exec()
+
+    # unused
     def delete_rows(self, arr, header):
         currentModel = self.studentModel if header == "student id" else self.courseModel
         for row in arr:
