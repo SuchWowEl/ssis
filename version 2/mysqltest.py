@@ -170,8 +170,9 @@ def search_records(search_values, boolean):
     # SELECT * FROM test_db.students WHERE `name` REGEXP 'an' OR `student id` REGEXP '3|6'
     for index, value in enumerate(search_values):
         if value:
+            searcher = "REGEXP" if index not in [2, 3, 4] else "="
             query = query + " " + \
-                f"`{column_names[index]}` REGEXP '{search_values[index]}' {boolean}"
+                f"`{column_names[index]}` {searcher} '{search_values[index]}' {boolean}"
     query = query.rstrip(f" {boolean}")
     print(query)
     mycursor.execute(query)
