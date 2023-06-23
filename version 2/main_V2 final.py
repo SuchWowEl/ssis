@@ -8,7 +8,7 @@ import csv
 import re
 import mysqltest as db
 # from gui_V2 import Ui_Dialog
-from gui_V2_copy import Ui_Dialog
+from gui_V2 import Ui_Dialog
 import pandas as pd
 
 # python -m PyQt6.uic.pyuic -o gui_V2_copy.py -x untitled2.ui
