@@ -572,30 +572,18 @@ class Functions(Ui_Dialog):
                     item.setEditable(False)
                     model.blockSignals(False)
                     if header == "course code" and table == "courses":
-                        self.lists[2] = db.list_of_courses()
+                        # self.lists[2] = db.list_of_courses()
                         self.updateModels("students")
-                        # self.editCourseNameinSTable(current_text, newInfo)
+                        self.editCourseNameinSTab(current_text, newInfo)
         except Exception as e:
             print(str(e))
             var = CustomWarningBox(Dialog, str(e))
             var.exec()
 
-    def editCourseNameinSTable(self, oldInfo, newInfo):
+    def editCourseNameinSTab(self, oldInfo, newInfo):
         print("\nupdateCourses called !!!")
-        print(self.lists[2])
-        print(self.studentModel.columnCount())
 
-        # edit "course" in student Table when text in that row == oldInfo
-        column = self.studentModel.columnCount()-1
-        self.studentModel.blockSignals(True)
-        for row in range(self.studentModel.rowCount()):
-            index = self.studentModel.index(row, column)
-            item = self.studentModel.itemFromIndex(index)
-            print(item.text())
-            if item.text() == oldInfo:
-                item.setText(newInfo)
-        self.studentModel.blockSignals(False)
-
+        self.lists[2] = db.list_of_courses()
         self.comboBox.clear()
         self.comboBox.addItems(self.lists[2])
 
